@@ -1,0 +1,149 @@
+AUTO_RESUME: false
+CUDNN:
+  BENCHMARK: true
+  DETERMINISTIC: false
+  ENABLED: true
+DATASET:
+  DATASET: svcnet
+  EXTRA_TRAIN_SET: ''
+  NUM_CLASSES: 2
+  NUM_STUFF: 11
+  NUM_THINGS: 8
+  ROOT: data/
+  TEST_SET: list/svcnet/val.lst
+  TRAIN_SET: list/davis/train.lst
+DEBUG:
+  DEBUG: false
+  SAVE_BATCH_IMAGES_GT: false
+  SAVE_BATCH_IMAGES_PRED: false
+  SAVE_HEATMAPS_GT: false
+  SAVE_HEATMAPS_PRED: false
+GPUS:
+- 0
+LOG_DIR: log
+LOSS:
+  BALANCE_WEIGHTS:
+  - 1
+  CLASS_BALANCE: false
+  OHEMKEEP: 131072
+  OHEMTHRES: 0.9
+  SEMATIC_WEIGHT: 0.5
+  USE_OHEM: false
+MODEL:
+  ALIGN_CORNERS: false
+  EXTRA:
+    FINAL_CONV_KERNEL: 1
+    STAGE1:
+      BLOCK: BOTTLENECK
+      FUSE_METHOD: SUM
+      NUM_BLOCKS:
+      - 4
+      NUM_CHANNELS:
+      - 64
+      NUM_MODULES: 1
+      NUM_RANCHES: 1
+    STAGE2:
+      BLOCK: BASIC
+      FUSE_METHOD: SUM
+      NUM_BLOCKS:
+      - 4
+      - 4
+      NUM_BRANCHES: 2
+      NUM_CHANNELS:
+      - 48
+      - 96
+      NUM_MODULES: 1
+    STAGE3:
+      BLOCK: BASIC
+      FUSE_METHOD: SUM
+      NUM_BLOCKS:
+      - 4
+      - 4
+      - 4
+      NUM_BRANCHES: 3
+      NUM_CHANNELS:
+      - 48
+      - 96
+      - 192
+      NUM_MODULES: 4
+    STAGE4:
+      BLOCK: BASIC
+      FUSE_METHOD: SUM
+      NUM_BLOCKS:
+      - 4
+      - 4
+      - 4
+      - 4
+      NUM_BRANCHES: 4
+      NUM_CHANNELS:
+      - 48
+      - 96
+      - 192
+      - 384
+      NUM_MODULES: 3
+  LOADWEIGHT: ''
+  NAME: seg_hrnet_mpc
+  NUM_OUTPUTS: 1
+  OCR:
+    DROPOUT: 0.05
+    KEY_CHANNELS: 256
+    MID_CHANNELS: 512
+    SCALE: 1
+  PRETRAINED: output/cityscapes/seg_hrnet_ocr_w48_train_512x1024_sgd_lr1e-2_wd5e-4_bs_12_epoch484/best.pth
+MULTI_RUN: true
+OUTPUT_DIR: output
+PIN_MEMORY: true
+PRINT_FREQ: 100
+RANK: 0
+TEST:
+  BASE_SIZE: 2048
+  BATCH_SIZE_PER_GPU: 2
+  FLIP_TEST: false
+  IMAGE_SIZE:
+  - 512
+  - 512
+  MODEL_FILE: ''
+  MULTI_SCALE: false
+  NUM_SAMPLES: 0
+  OUTPUT_INDEX: -1
+  SCALE_LIST:
+  - 1
+TRAIN:
+  BASE_SIZE: 2048
+  BATCH_SIZE_PER_GPU: 3
+  BEGIN_EPOCH: 0
+  DOWNSAMPLERATE: 1
+  END_EPOCH: 100
+  EXTRA_EPOCH: 0
+  EXTRA_LR: 0.001
+  FLIP: true
+  FREEZE_EPOCHS: -1
+  FREEZE_LAYERS: ''
+  IGNORE_LABEL: 255
+  IMAGE_SIZE:
+  - 512
+  - 512
+  LR: 0.01
+  LR_FACTOR: 0.1
+  LR_STEP:
+  - 90
+  - 110
+  MOMENTUM: 0.9
+  MULTI_SCALE: false
+  NESTEROV: false
+  NONBACKBONE_KEYWORDS: []
+  NONBACKBONE_MULT: 10
+  NUM_SAMPLES: 0
+  OPTIMIZER: sgd
+  RANDOM_BRIGHTNESS: false
+  RANDOM_BRIGHTNESS_SHIFT_VALUE: 10
+  RESUME: false
+  SCALE_FACTOR: 16
+  SEMATIC_ONLY: true
+  SHOW_IMAGE: false
+  SHUFFLE: true
+  SLOWBACKBONE_KEYWORDS:
+  - sematic_bone
+  SLOWBACKBONE_MULT: 0.01
+  WD: 0.0005
+WORKERS: 0

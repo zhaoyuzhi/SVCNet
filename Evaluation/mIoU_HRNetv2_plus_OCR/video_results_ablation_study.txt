@@ -1,0 +1,8 @@
+SVCNet: 0.9004254028110383
+SVCNet_without_cpnet_segmentation_loss: 0.8780144472450888
+SVCNet_without_cpnet_tuning_on_video: 0.6464100866979572
+SVCNet_without_long: 0.891915062305562
+SVCNet_without_short: 0.8949097269850563
+SVCNet_without_short_and_long: 0.8934156712870704
+SVCNet_64p: 0.8768163032136611
+SVCNet_12p: 0.8960248265725084

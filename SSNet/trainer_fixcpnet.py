@@ -14,7 +14,7 @@ import torch.backends.cudnn as cudnn
 import logging
 
 import datasets.data_utils as dutils
-import datasets.ssnet_vimeo as ssnet_dataset
+import datasets.ssnet_DAVISVidevo as ssnet_dataset
 import networks.pwcnet as pwcnet
 import networks.loss as loss_def
 import utils
@@ -70,9 +70,6 @@ def Trainer(opt):
         flownet = flownet.cuda()
 
     # Optimizers
-    optimizer_G_CPNet = torch.optim.Adam(
-        cpnet.parameters(), lr = opt.lr_g_cpnet, betas = (opt.b1, opt.b2), weight_decay = opt.weight_decay
-    )
     optimizer_G = torch.optim.Adam(
         ssnet.parameters(), lr = opt.lr_g_ssnet, betas = (opt.b1, opt.b2), weight_decay = opt.weight_decay
     )
@@ -122,7 +119,12 @@ def Trainer(opt):
 
     # Define the dataset
     imglist = utils.text_readlines(opt.video_imagelist_txt)
-    trainset = ssnet_dataset.MultiFramesDataset(opt, imglist)
+    classlist = utils.text_readlines(opt.video_class_txt)
+    
+    if opt.use_lmdb:
+        trainset = ssnet_dataset.MultiFramesDataset_lmdb(opt, imglist, classlist)
+    else:
+        trainset = ssnet_dataset.MultiFramesDataset(opt, imglist, classlist)
     print('The overall number of classes:', len(trainset))
 
     # Define the dataloader
@@ -133,34 +135,44 @@ def Trainer(opt):
     #                 Training
     # ----------------------------------------
 
+    # Define whether using the long-range connection
+    use_long_connection = False
+    if hasattr(ssnet, 'module'):
+        if hasattr(ssnet.module, 'corr'):
+            use_long_connection = True
+    else:
+        if hasattr(ssnet, 'corr'):
+            use_long_connection = True
+
     # Count start time
     prev_time = time.time()
     
     # For loop training
     for epoch in range(opt.epochs):
-        for iteration, (in_part, in_transform_part, out_part, color_scribble_part) in enumerate(dataloader):
+        for iteration, (in_part, in_transform_part, out_part, color_scribble_part, out_large_part) in enumerate(dataloader):
             
             # ----------------------------------------
             # To cuda
             input_frames = []
             input_transform_frames = []
             gt_frames = []
+            gt_large_frames = []
             scribble_frames = []
             for i in range(opt.iter_frames):
                 input_frames.append(in_part[i].cuda())
                 input_transform_frames.append(in_transform_part[i].cuda())
                 gt_frames.append(out_part[i].cuda())
+                gt_large_frames.append(out_large_part[i].cuda())
                 scribble_frames.append(color_scribble_part[i].cuda())
             
             # Forward CPNet first to obtain the colorized frames
             cpnet_frames = []
-            for j in range(opt.iter_frames):
-                x_t = input_frames[j][:, [0], :, :]
-                color_scribble = scribble_frames[j]
-                cpnet_out, _ = cpnet(x_t, color_scribble)
-                cpnet_frames.append(cpnet_out)
-            # save the first CPNet's output
-            #cpnet_out_0 = cpnet_frames[0]
+            with torch.no_grad():
+                for j in range(opt.iter_frames):
+                    x_t = input_frames[j][:, [0], :, :]
+                    color_scribble = scribble_frames[j]
+                    cpnet_out, _ = cpnet(x_t, color_scribble)
+                    cpnet_frames.append(cpnet_out)
             
             # Prepare all the frames
             overall_frames = opt.iter_frames * 2 - 1    # e.g., 13 = 7 * 2 - 1
@@ -170,21 +182,23 @@ def Trainer(opt):
             input_frames_supp = []
             input_transform_frames_supp = []
             gt_frames_supp = []
+            gt_large_frames_supp = []
             cpnet_frames_supp = []
             for k in range(opt.iter_frames):
                 input_frames_supp.append(input_frames[opt.iter_frames - 1 - k])
                 input_transform_frames_supp.append(input_transform_frames[opt.iter_frames - 1 - k])
                 gt_frames_supp.append(gt_frames[opt.iter_frames - 1 - k])
+                gt_large_frames_supp.append(gt_large_frames[opt.iter_frames - 1 - k])
                 cpnet_frames_supp.append(cpnet_frames[opt.iter_frames - 1 - k])
             input_frames = input_frames + input_frames_supp
             input_transform_frames = input_transform_frames + input_transform_frames_supp
             gt_frames = gt_frames + gt_frames_supp
+            gt_large_frames = gt_large_frames + gt_large_frames_supp
             cpnet_frames = cpnet_frames + cpnet_frames_supp
             # ----------------------------------------
 
             # ----------------------------------------
             # Train Generator
-            optimizer_G_CPNet.zero_grad()
             optimizer_G.zero_grad()
             
             # Define loss functions
@@ -192,20 +206,22 @@ def Trainer(opt):
             loss_TV = 0
             loss_flow_short = 0
             loss_flow_long = 0
+            loss_L1_large = 0
+            loss_reg = 0
 
             # Forward SSNet and compute loss functions
             # 0123456 - 1234567 - 2345678 - ... - 6789101112 (overall 7 groups)
             for ii in range(ssnet_training_iter_per_batch):
                 # warp previous and leading frames through optical flows
                 center_id = ii + 3
-                flow_minus3_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii], input_frames[center_id], drange = True, reshape = False)
-                flow_minus2_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+1], input_frames[center_id], drange = True, reshape = False)
-                flow_minus1_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+2], input_frames[center_id], drange = True, reshape = False)
-                flow_add1_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+4], input_frames[center_id], drange = True, reshape = False)
-                flow_add2_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+5], input_frames[center_id], drange = True, reshape = False)
-                flow_add3_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+6], input_frames[center_id], drange = True, reshape = False)
+                flow_minus3_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii], input_frames[center_id], drange = True, reshape = True)
+                flow_minus2_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+1], input_frames[center_id], drange = True, reshape = True)
+                flow_minus1_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+2], input_frames[center_id], drange = True, reshape = True)
+                flow_add1_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+4], input_frames[center_id], drange = True, reshape = True)
+                flow_add2_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+5], input_frames[center_id], drange = True, reshape = True)
+                flow_add3_to_current = pwcnet.PWCEstimate(flownet, input_frames[ii+6], input_frames[center_id], drange = True, reshape = True)
                 if ii > 0:
-                    flow_zero_to_current = pwcnet.PWCEstimate(flownet, input_frames[0], input_frames[center_id], drange = True, reshape = False)
+                    flow_zero_to_current = pwcnet.PWCEstimate(flownet, input_frames[0], input_frames[center_id], drange = True, reshape = True)
                 else:
                     flow_zero_to_current = flow_minus3_to_current
                 
@@ -243,10 +259,12 @@ def Trainer(opt):
                 else:
                     ssnet_t_minus1_warp = cpnet_frames[center_id]
                 
+                # Define mask list and cpnet list
+                mask_warp_list = [mask_minus3_to_current, mask_minus2_to_current, mask_minus1_to_current, mask_add1_to_current, mask_add2_to_current, mask_add3_to_current]
+                cpnet_warp_list = [cpnet_t_minus3_warp, cpnet_t_minus2_warp, cpnet_t_minus1_warp, cpnet_t_add1_warp, cpnet_t_add2_warp, cpnet_t_add3_warp]
+
                 # arrange all inputs for SSNet
-                # x_t = input_frames[center_id]
-                # cpnet_t = cpnet_frames[center_id]
-                if ii == 0:
+                if use_long_connection and ii == 0:
                     # cpnet_ab_to_PIL_rgb recieves: cv2 format grayscale tensor + cpnet format tensor
                     cpnet_t_0_PIL_rgb = dutils.cpnet_ab_to_PIL_rgb(input_frames[0][:, [0], :, :], cpnet_frames[0])
                     for batch in range(len(cpnet_t_0_PIL_rgb)):
@@ -265,18 +283,19 @@ def Trainer(opt):
                         else:
                             features_B = ssnet.corr.vggnet(I_reference_rgb, ["r12", "r22", "r32", "r42", "r52"], preprocess = True)
 
-                mask_warp_list = [mask_minus3_to_current, mask_minus2_to_current, mask_minus1_to_current, mask_add1_to_current, mask_add2_to_current, mask_add3_to_current]
-                cpnet_warp_list = [cpnet_t_minus3_warp, cpnet_t_minus2_warp, cpnet_t_minus1_warp, cpnet_t_add1_warp, cpnet_t_add2_warp, cpnet_t_add3_warp]
-
                 # SSNet forward propagation
-                ssnet_t, _, p_t, nonlocal_t = ssnet(input_transform_frames[center_id], IB_lab, features_B, cpnet_frames[center_id], ssnet_t_minus1_warp, cpnet_warp_list, mask_warp_list)
+                if use_long_connection:
+                    ssnet_t, ssnet_sr_t, residual = ssnet(input_transform_frames[center_id], IB_lab, features_B, cpnet_frames[center_id], ssnet_t_minus1_warp, cpnet_warp_list, mask_warp_list)
+                else:
+                    ssnet_t, ssnet_sr_t, residual = ssnet(input_transform_frames[center_id], cpnet_frames[center_id], ssnet_t_minus1_warp, cpnet_warp_list, mask_warp_list)
                 
                 # Pixel-level Colorization loss
                 loss_L1 += criterion_L1(ssnet_t, gt_frames[center_id])
-
+                loss_L1_large += criterion_L1(ssnet_sr_t, gt_large_frames[center_id])
+                
                 # Total variation loss
                 loss_TV += criterion_TV(ssnet_t)
-
+                
                 # Compute the short-term loss
                 if ii > 0:
                     loss_flow_short += criterion_L1(mask_minus1_to_current * ssnet_t, mask_minus1_to_current * ssnet_t_minus1_warp)
@@ -285,11 +304,13 @@ def Trainer(opt):
                 if ii > 1:
                     loss_flow_long += criterion_L1(mask_zero_to_current * ssnet_t, mask_zero_to_current * ssnet_first_output_warp)
                 
+                # Compute the regularization loss
+                loss_reg += criterion_L1(residual, torch.zeros_like(residual).cuda())
+                
             # Overall Loss and optimize
-            loss = opt.lambda_l1 * loss_L1 + opt.lambda_tv * loss_TV + opt.lambda_flow_short * loss_flow_short + opt.lambda_flow_long * loss_flow_long
+            loss = opt.lambda_l1 * loss_L1 + opt.lambda_tv * loss_TV + opt.lambda_flow_short * loss_flow_short + opt.lambda_flow_long * loss_flow_long + opt.lambda_reg * loss_reg
             loss.backward()
             optimizer_G.step()
-            optimizer_G_CPNet.step()
 
             # Determine approximate time left
             iters_done = epoch * len(dataloader) + iteration
@@ -298,10 +319,12 @@ def Trainer(opt):
             prev_time = time.time()
 
             # Print log
-            log_str = "[Epoch %d/%d] [Batch %d/%d] [L1 Loss: %.4f] [TV Loss: %.4f] [Flow Loss Short: %.4f] [Flow Loss Long: %.4f] Time_left: %s" % \
+            log_str = "[Epoch %d/%d] [Batch %d/%d] [L1 Loss: %.4f] [L1 Loss (SR): %.4f] [TV Loss: %.4f] [Flow Loss Short: %.4f] [Flow Loss Long: %.4f] [Regularization Loss: %.8f] Time_left: %s" % \
                 ((epoch + 1), opt.epochs, iteration, len(dataloader), loss_L1.item() / (ssnet_training_iter_per_batch), \
-                        loss_TV.item() / (ssnet_training_iter_per_batch), loss_flow_short.item() / (ssnet_training_iter_per_batch - 1), \
-                            loss_flow_long.item() / (ssnet_training_iter_per_batch - 2), time_left)
+                        loss_L1_large.item() / (ssnet_training_iter_per_batch), loss_TV.item() / (ssnet_training_iter_per_batch), \
+                            loss_flow_short.item() / (ssnet_training_iter_per_batch - 1), \
+                                loss_flow_long.item() / (ssnet_training_iter_per_batch - 2), \
+                                    loss_reg.item() / (ssnet_training_iter_per_batch), time_left)
             
             print(log_str)
             logging.info(log_str)
@@ -313,7 +336,6 @@ def Trainer(opt):
                 #img_list += [p_t[:, 2:4, :, :], p_t[:, 4:6, :, :], p_t[:, 6:8, :, :], p_t[:, 8:10, :, :], p_t[:, 10:12, :, :], p_t[:, 12:14, :, :], p_t[:, 14:16, :, :]]
                 #name_list += ['pt_lastout', 'refined1', 'refined2', 'refined3', 'refined4', 'refined5', 'refined6']
                 utils.sample(sample_folder = sample_path, sample_name = str(iters_done + 1), img_list = img_list, name_list = name_list)
-                utils.sample_nlimg(sample_folder = sample_path, sample_name = str(iters_done + 1), img = nonlocal_t, name = 'nonlocal_out')
 
             # Save model at certain epochs or iterations
             save_model(opt, (epoch + 1), (iters_done + 1), len(dataloader), ssnet)

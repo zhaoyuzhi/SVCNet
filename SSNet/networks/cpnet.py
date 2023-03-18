@@ -44,7 +44,6 @@ class CPNet_Seg_subnet(nn.Module):
         out = self.conv3_2(input3)                              # out: batch * 1 * 256 * 256
         return out
 
-
 class CPNet_VGG16(nn.Module):
     def __init__(self, opt):
         super(CPNet_VGG16, self).__init__()
@@ -117,8 +116,6 @@ class CPNet_VGG16(nn.Module):
         self.D3_2 = Conv2dLayer(opt.start_channels * 4, opt.start_channels, 3, 1, 1, pad_type = opt.pad, activation = opt.activ_g, norm = opt.norm_g)
         self.D2_2 = Conv2dLayer(opt.start_channels * 2, opt.start_channels, 3, 1, 1, pad_type = opt.pad, activation = opt.activ_g, norm = opt.norm_g)
         self.D1 = Conv2dLayer(opt.start_channels, opt.out_channels, 3, 1, 1, pad_type = opt.pad, activation = 'sigmoid', norm = 'none')
-        # Decoder - segmentation
-        self.seg_decoder = CPNet_Seg_subnet(opt)
 
     def forward(self, x, scribble):
         # grayscale vgg encoder (grayscale features)
@@ -170,7 +167,6 @@ class CPNet_VGG16(nn.Module):
         # decoder level 1
         out = self.D1(dec1)                                     # out: batch * 2 * 256 * 256
         return out, out
-
 
 class CPNet_VGG16_Seg(nn.Module):
     def __init__(self, opt):
@@ -302,7 +298,6 @@ class CPNet_VGG16_Seg(nn.Module):
         # seg decoder
         seg_out = self.seg_decoder(dec4_copy, dec3_copy, dec2_copy)
         return out, seg_out
-
 
 if __name__ == "__main__":
 

@@ -4,15 +4,17 @@
 
 ### 1.1 Method
 
+This code is based on the following methods:
+
 - HRNetv2 + OCR
 
 ### 1.2 Environment
 
-- PyTorch 1.0.0
-- opencv-python
-- matplotlib
+This code can use the same environment as the SVCNet (**svcnet** environment).
 
-## 2 Testing
+## 2 Run
+
+We need to generate segmentation maps for different colorization results. Currently, this code only supports generating segmentation maps for one method at one time.
 
 ### 2.1 Used files
 

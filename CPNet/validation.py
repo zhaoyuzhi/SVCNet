@@ -40,10 +40,11 @@ if __name__ == "__main__":
         default = 'videvo', \
             help = 'DAVIS | videvo')
     parser.add_argument('--save_rgb_path', type = str, \
-        default = './result', \
+        default = './val_result', \
             help = 'save the generated rgb image to certain path')
     parser.add_argument('--finetune_path', type = str, \
-        default = './models/cpnet_epoch40_batchsize32.pth', help = 'the load name of models')
+        default = './models/cpnet_epoch40_batchsize32.pth', \
+            help = 'the load name of models')
     # Network parameters
     parser.add_argument('--in_channels', type = int, default = 1, help = 'input RGB image')
     parser.add_argument('--scribble_channels', type = int, default = 2, help = 'input scribble image')
@@ -62,11 +63,10 @@ if __name__ == "__main__":
     parser.add_argument('--scribble_root', type = str, \
         default = "E:\\code\\Scribble-based Video Colorization\\experiment\\fixed_color_scribbles", \
             help = 'the base training folder')
-    parser.add_argument('--txt_root', type = str, \
-        default = "./txt", \
-            help = 'the base training folder')
-    parser.add_argument('--crop_size_h', type = int, default = 128, help = 'single patch size') # second stage (128p, 256p, 448p): 128, 256, 448
-    parser.add_argument('--crop_size_w', type = int, default = 256, help = 'single patch size') # second stage (128p, 256p, 448p): 256, 448, 832
+    parser.add_argument('--vgg_name', type = str, default = "./trained_models/vgg16_pretrained.pth", help = 'pre-trained vgg')
+    parser.add_argument('--txt_root', type = str, default = "./txt", help = 'the base training folder')
+    parser.add_argument('--crop_size_h', type = int, default = 256, help = 'single patch size') # second stage (128p, 256p, 448p): 128, 256, 448
+    parser.add_argument('--crop_size_w', type = int, default = 448, help = 'single patch size') # second stage (128p, 256p, 448p): 256, 448, 832
     opt = parser.parse_args()
     print(opt)
     

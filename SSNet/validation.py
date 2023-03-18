@@ -141,7 +141,7 @@ if __name__ == "__main__":
     parser.add_argument('--pre_train_ssnet_type', type = str, default = 'SSNet', help = 'pre_train_ssnet_type')
     parser.add_argument('--tag', type = str, default = 'DAVIS', help = 'DAVIS | videvo')
     parser.add_argument('--save_rgb_path', type = str, \
-        default = './val_result/dv', \
+        default = './val_result', \
             help = 'save the generated rgb image to certain path')
     parser.add_argument('--cpnet_path', type = str, default = '../trained_models/CPNet/models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', help = 'the load name of models')
     parser.add_argument('--ssnet_path', type = str, default = './trained_ssnet/ssnet_epoch2000_bs1.pth', help = 'the load name of models')

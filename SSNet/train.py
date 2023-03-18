@@ -94,6 +94,7 @@ if __name__ == "__main__":
     print(opt)
     
     # Enter main function
-    import trainers.trainer_DAVISVidevo as trainer
+    #import trainer_fixcpnet as trainer
+    import trainer as trainer
     trainer.Trainer(opt)
     

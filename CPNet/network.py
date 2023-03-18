@@ -3,10 +3,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from network_module import *
-from network_vgg import *
 
 import utils
-
 
 #-----------------------------------------------
 #               CPNet - Generator
@@ -46,7 +44,6 @@ class CPNet_Seg_subnet(nn.Module):
         input3 = F.interpolate(input3, scale_factor = 2, mode = 'bilinear')
         out = self.conv3_2(input3)                              # out: batch * 1 * 256 * 256
         return out
-
 
 class CPNet_VGG16(nn.Module):
     def __init__(self, opt):
@@ -120,8 +117,6 @@ class CPNet_VGG16(nn.Module):
         self.D3_2 = Conv2dLayer(opt.start_channels * 4, opt.start_channels, 3, 1, 1, pad_type = opt.pad, activation = opt.activ_g, norm = opt.norm_g)
         self.D2_2 = Conv2dLayer(opt.start_channels * 2, opt.start_channels, 3, 1, 1, pad_type = opt.pad, activation = opt.activ_g, norm = opt.norm_g)
         self.D1 = Conv2dLayer(opt.start_channels, opt.out_channels, 3, 1, 1, pad_type = opt.pad, activation = 'sigmoid', norm = 'none')
-        # Decoder - segmentation
-        self.seg_decoder = CPNet_Seg_subnet(opt)
 
     def forward(self, x, scribble):
         # grayscale vgg encoder (grayscale features)
@@ -173,7 +168,6 @@ class CPNet_VGG16(nn.Module):
         # decoder level 1
         out = self.D1(dec1)                                     # out: batch * 2 * 256 * 256
         return out
-
 
 class CPNet_VGG16_Seg(nn.Module):
     def __init__(self, opt):
@@ -305,35 +299,6 @@ class CPNet_VGG16_Seg(nn.Module):
         # seg decoder
         seg_out = self.seg_decoder(dec4_copy, dec3_copy, dec2_copy)
         return out, seg_out
-
-
-#-----------------------------------------------
-#                  Discriminator
-#-----------------------------------------------
-# Input: generated image / ground truth and mask
-# Output: patch based region, we set 30 * 30
-class PatchDiscriminator(nn.Module):
-    def __init__(self, opt):
-        super(PatchDiscriminator, self).__init__()
-        # Down sampling
-        self.block1 = Conv2dLayer(opt.out_channels + opt.scribble_channels, opt.start_channels, 7, 1, 3, pad_type = opt.pad, activation = opt.activ_d, norm = 'none', sn = True)
-        self.block2 = Conv2dLayer(opt.start_channels, opt.start_channels * 2, 4, 2, 1, pad_type = opt.pad, activation = opt.activ_d, norm = opt.norm_d, sn = True)
-        self.block3 = Conv2dLayer(opt.start_channels * 2, opt.start_channels * 4, 4, 2, 1, pad_type = opt.pad, activation = opt.activ_d, norm = opt.norm_d, sn = True)
-        self.block4 = Conv2dLayer(opt.start_channels * 4, opt.start_channels * 4, 4, 2, 1, pad_type = opt.pad, activation = opt.activ_d, norm = opt.norm_d, sn = True)
-        self.block5 = Conv2dLayer(opt.start_channels * 4, opt.start_channels * 4, 4, 2, 1, pad_type = opt.pad, activation = opt.activ_d, norm = opt.norm_d, sn = True)
-        self.block6 = Conv2dLayer(opt.start_channels * 4, 1, 4, 2, 1, pad_type = opt.pad, activation = 'none', norm = 'none', sn = True)
-        
-    def forward(self, img, scribble):
-        # the input x should contain 6 channels because it is a combination of recon image and mask
-        x = torch.cat((img, scribble), 1)
-        x = self.block1(x)                                      # out: batch * 64 * 256 * 256
-        x = self.block2(x)                                      # out: batch * 128 * 128 * 128
-        x = self.block3(x)                                      # out: batch * 256 * 64 * 64
-        x = self.block4(x)                                      # out: batch * 256 * 32 * 32
-        x = self.block5(x)                                      # out: batch * 256 * 16 * 16
-        x = self.block6(x)                                      # out: batch * 1 * 8 * 8
-        return x
-
 
 if __name__ == "__main__":
 

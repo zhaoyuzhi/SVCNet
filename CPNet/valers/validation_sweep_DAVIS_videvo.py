@@ -1,12 +1,10 @@
 import argparse
 import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-
 import cv2
 from PIL import Image
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 import utils
 
@@ -21,7 +19,6 @@ def define_dataset(opt):
             if imgname.split('/')[-2] == classname:
                 imgroot[i].append(imgname)
 
-    print('There are %d videos in the test set.' % (len(imgroot)))
     return imgroot
 
 def color_scribble(img, color_point, color_width):
@@ -83,13 +80,12 @@ if __name__ == "__main__":
     # ----------------------------------------
     parser = argparse.ArgumentParser()
     # General parameters
-    parser.add_argument('--pre_train_cpnet_type', type = str, default = 'CPNet_VGG16_Seg', help = 'pre_train_cpnet_type')
+    parser.add_argument('--pre_train_cpnet_type', type = str, default = 'CPNet_VGG16', help = 'pre_train_cpnet_type')
     parser.add_argument('--tag', type = str, default = 'DAVIS', help = 'DAVIS | videvo')
-    parser.add_argument('--save_rgb_path', type = str, \
-        default = './result_random_scribble_DAVIS_videvo', \
-            help = 'save the generated rgb image to certain path')
     parser.add_argument('--finetune_path', type = str, \
-        default = './models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', help = 'the load name of models')
+        default = './models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', \
+            help = 'the load name of models')
+    parser.add_argument('--vgg_name', type = str, default = "./trained_models/vgg16_pretrained.pth", help = 'pre-trained vgg')
     # Network parameters
     parser.add_argument('--in_channels', type = int, default = 1, help = 'input RGB image')
     parser.add_argument('--scribble_channels', type = int, default = 2, help = 'input scribble image')
@@ -105,15 +101,11 @@ if __name__ == "__main__":
     parser.add_argument('--base_root', type = str, \
         default = '/home/zyz/Documents/SVCNet/2dataset_RGB', \
             help = 'the base training folder')
-    parser.add_argument('--vgg_name', type = str, default = "/home/mybeast/Downloads/vgg16_pretrained.pth", \
-        help = 'load the pre-trained vgg model with certain epoch')
-    parser.add_argument('--txt_root', type = str, \
-        default = "./txt", \
-            help = 'the base training folder')
+    parser.add_argument('--txt_root', type = str, default = "./txt", help = 'the base training folder')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'single patch size') # second stage (128p, 256p, 448p): 128, 256, 448
     parser.add_argument('--crop_size_w', type = int, default = 448, help = 'single patch size') # second stage (128p, 256p, 448p): 256, 448, 832
     # color scribble parameters
-    parser.add_argument('--color_point', type = int, default = 0, help = 'number of color scribbles')
+    parser.add_argument('--color_point', type = int, default = 40, help = 'number of color scribbles')
     parser.add_argument('--color_width', type = int, default = 5, help = 'width of each color scribble')
     parser.add_argument('--color_blur_width', type = int, default = 11, help = 'Gaussian blur width of each color scribble')
     opt = parser.parse_args()
@@ -137,9 +129,10 @@ if __name__ == "__main__":
     # ----------------------------------------
     #                 Testing
     # ----------------------------------------
-    # forward
-    val_PSNR = 0
-    val_SSIM = 0
+    # Define the scribble and metric list
+    scrib_list = np.arange(0, opt.color_point + 1)
+    val_PSNR_list = np.zeros_like(scrib_list)
+    val_SSIM_list = np.zeros_like(scrib_list)
     count = 0
     
     # Choose a category of dataset, it is fair for each dataset to be chosen
@@ -155,47 +148,49 @@ if __name__ == "__main__":
             gt_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
             gt_bgr = torch.from_numpy(gt_bgr.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
 
+            gt_lab = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
+            gt_ab = np.concatenate((gt_lab[:, :, [1]], gt_lab[:, :, [2]]), axis = 2)
+            gt_ab = torch.from_numpy(gt_ab.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
+
             img = cv2.resize(img, (opt.crop_size_w, opt.crop_size_h), interpolation = cv2.INTER_CUBIC)
             lab = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
             img_l = lab[:, :, [0]]
             img_ab = np.concatenate((lab[:, :, [1]], lab[:, :, [2]]), axis = 2)
             img_l = torch.from_numpy(img_l.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
-
-            scribble = color_scribble(img = img, color_point = opt.color_point, color_width = opt.color_width)
-            scribble = cv2.cvtColor(scribble, cv2.COLOR_RGB2Lab)
-            scribble = np.concatenate((scribble[:, :, [1]], scribble[:, :, [2]]), axis = 2)
-            #color_scribble = self.blurish(img = color_scribble, color_blur_width = self.opt.color_blur_width)
-            scribble = torch.from_numpy(scribble.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
+            img_ab = torch.from_numpy(img_ab.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
 
             # forward propagation
             with torch.no_grad():
-                out = generator(img_l, scribble)
-            
-            if isinstance(out, tuple):
-                img_out = out[0]
-                seg_out = out[1]
-            else:
-                img_out = out
+                for j in range(opt.color_point + 1):
+                    
+                    scribble = color_scribble(img = img, color_point = j, color_width = opt.color_width)
+                    scribble = cv2.cvtColor(scribble, cv2.COLOR_RGB2Lab)
+                    scribble = np.concatenate((scribble[:, :, [1]], scribble[:, :, [2]]), axis = 2)
+                    #color_scribble = self.blurish(img = color_scribble, color_blur_width = self.opt.color_blur_width)
+                    scribble = torch.from_numpy(scribble.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
+
+                    out = generator(img_l, scribble)
                 
-            # Save
-            bgr = convert_lab_to_bgr(img_l, img_out)
-            save_rgb_sub_folder_name = os.path.join(opt.save_rgb_path, opt.tag, imgroot[index][i].split('/')[0])
-            utils.check_path(save_rgb_sub_folder_name)
-            save_rgb_name = os.path.join(save_rgb_sub_folder_name, imgroot[index][i].split('/')[1].split('.')[0] + '.png')
-            bgr = resize_Lab(L_large_size = img_grayscale, input_small_size = bgr, input_rgb_tag = True)
-            cv2.imwrite(save_rgb_name, bgr)
-
-            # PSNR
+                    if isinstance(out, tuple):
+                        img_out = out[0]
+                        seg_out = out[1]
+                    else:
+                        img_out = out
+                    
+                    # PSNR
+                    img_out = F.interpolate(img_out, size = [gt_ab.shape[2], gt_ab.shape[3]], mode = 'bilinear')
+                    assert img_out.shape == gt_ab.shape
+                    this_PSNR = utils.psnr(img_out, gt_ab, 1) * gt_ab.shape[0]
+                    val_PSNR_list[j] = val_PSNR_list[j] + this_PSNR
+                    this_SSIM = utils.ssim(img_out, gt_ab) * gt_ab.shape[0]
+                    val_SSIM_list[j] = val_SSIM_list[j] + this_SSIM
+                    #print(j, this_PSNR, this_SSIM)
+            
             count = count + 1
-            bgr = recover_ndarray_to_tensor(bgr).cuda()
-            assert bgr.shape == gt_bgr.shape
-            this_PSNR = utils.psnr(bgr, gt_bgr, 1) * gt_bgr.shape[0]
-            val_PSNR += this_PSNR
-            this_SSIM = utils.ssim(bgr, gt_bgr) * gt_bgr.shape[0]
-            val_SSIM += this_SSIM
-            print('The %d-th video, %d-th frame: PSNR: %.5f, SSIM: %.5f' % (index, i, this_PSNR, this_SSIM))
+            print('The %d-th video, %d-th frame' % (index, i))
 
-    val_PSNR = val_PSNR / count
-    val_SSIM = val_SSIM / count
-    print('The average of %s, %s: PSNR: %.5f, SSIM: %.5f' % (opt.save_rgb_path, opt.tag, val_PSNR, val_SSIM))
-    print('%s, %s: PSNR: %.5f, SSIM: %.5f' % (opt.finetune_path, opt.tag, val_PSNR, val_SSIM))
+    val_PSNR_list = val_PSNR_list / count
+    val_SSIM_list = val_SSIM_list / count
+    print(opt.finetune_path)
+    for k in range(opt.color_point + 1):
+        print('%s: Num of scrib: %d, PSNR: %.5f, SSIM: %.5f' % (opt.pre_train_cpnet_type, k, val_PSNR_list[k], val_SSIM_list[k]))

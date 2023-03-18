@@ -83,10 +83,12 @@ if __name__ == "__main__":
     parser.add_argument('--pre_train_cpnet_type', type = str, default = 'CPNet_VGG16_Seg', help = 'pre_train_cpnet_type')
     parser.add_argument('--tag', type = str, default = 'DAVIS', help = 'DAVIS | videvo')
     parser.add_argument('--save_rgb_path', type = str, \
-        default = './result_zero_scribble_DAVIS_videvo', \
+        default = './result_random_scribble_DAVIS_videvo', \
             help = 'save the generated rgb image to certain path')
     parser.add_argument('--finetune_path', type = str, \
-        default = './models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', help = 'the load name of models')
+        default = './models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', \
+            help = 'the load name of models')
+    parser.add_argument('--vgg_name', type = str, default = "./trained_models/vgg16_pretrained.pth", help = 'pre-trained vgg')
     # Network parameters
     parser.add_argument('--in_channels', type = int, default = 1, help = 'input RGB image')
     parser.add_argument('--scribble_channels', type = int, default = 2, help = 'input scribble image')
@@ -100,40 +102,18 @@ if __name__ == "__main__":
     parser.add_argument('--norm_d', type = str, default = 'bn', help = 'normalization type')
     # Dataset parameters
     parser.add_argument('--base_root', type = str, \
-        default = '/home/mybeast/Documents/zyz/dataset/VCGAN dataset/test', \
+        default = '/home/zyz/Documents/SVCNet/2dataset_RGB', \
             help = 'the base training folder')
-    parser.add_argument('--vgg_name', type = str, default = "../trained_models/vgg16_pretrained.pth", \
-        help = 'load the pre-trained vgg model with certain epoch')
-    parser.add_argument('--txt_root', type = str, \
-        default = "./txt", \
-            help = 'the base training folder')
+    parser.add_argument('--txt_root', type = str, default = "./txt", help = 'the base training folder')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'single patch size') # second stage (128p, 256p, 448p): 128, 256, 448
     parser.add_argument('--crop_size_w', type = int, default = 448, help = 'single patch size') # second stage (128p, 256p, 448p): 256, 448, 832
     # color scribble parameters
-    parser.add_argument('--color_point', type = int, default = 0, help = 'number of color scribbles')
-    parser.add_argument('--color_width', type = int, default = 0, help = 'width of each color scribble')
-    parser.add_argument('--color_blur_width', type = int, default = 0, help = 'Gaussian blur width of each color scribble')
+    parser.add_argument('--color_point', type = int, default = 40, help = 'number of color scribbles')
+    parser.add_argument('--color_width', type = int, default = 5, help = 'width of each color scribble')
+    parser.add_argument('--color_blur_width', type = int, default = 11, help = 'Gaussian blur width of each color scribble')
     opt = parser.parse_args()
     print(opt)
-
-    # ----------------------------------------
-    # PSNR and SSIM results on DAVIS dataset, in the RGB color space:
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg_retrained/cpnet_epoch8_batchsize64.pth, DAVIS: PSNR: 23.67223, SSIM: 0.95904
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg_retrained/cpnet_epoch9_batchsize64.pth, DAVIS: PSNR: 23.78347, SSIM: 0.95908
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg_retrained/cpnet_epoch10_batchsize64.pth, DAVIS: PSNR: 23.85615, SSIM: 0.95917
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg_retrained/cpnet_epoch11_batchsize64.pth, DAVIS: PSNR: 23.69863, SSIM: 0.95874
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg_retrained/cpnet_epoch12_batchsize64.pth, DAVIS: PSNR: 23.70125, SSIM: 0.95867
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg_retrained/cpnet_epoch13_batchsize64.pth, DAVIS: PSNR: 23.57183, SSIM: 0.95818
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg_retrained/cpnet_epoch14_batchsize64.pth, DAVIS: PSNR: 23.71069, SSIM: 0.95878
     
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg/cpnet_epoch8_batchsize16.pth, DAVIS: PSNR: 23.64824, SSIM: 0.95777
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg/cpnet_epoch9_batchsize16.pth, DAVIS: PSNR: 23.60501, SSIM: 0.95818
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg/cpnet_epoch10_batchsize16.pth, DAVIS: PSNR: 23.87217, SSIM: 0.95893
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg/cpnet_epoch11_batchsize16.pth, DAVIS: PSNR: 23.67448, SSIM: 0.95861
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg/cpnet_epoch12_batchsize16.pth, DAVIS: PSNR: 23.76631, SSIM: 0.95907
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg/cpnet_epoch13_batchsize16.pth, DAVIS: PSNR: 23.71385, SSIM: 0.95829
-    # ./models_2nd_vimeo_256p/CPNet_VGG16_Seg/cpnet_epoch14_batchsize16.pth, DAVIS: PSNR: 23.75667, SSIM: 0.95877
-
     # ----------------------------------------
     #       Initialize testing network
     # ----------------------------------------
@@ -179,18 +159,17 @@ if __name__ == "__main__":
             scribble = color_scribble(img = img, color_point = opt.color_point, color_width = opt.color_width)
             scribble = cv2.cvtColor(scribble, cv2.COLOR_RGB2Lab)
             scribble = np.concatenate((scribble[:, :, [1]], scribble[:, :, [2]]), axis = 2)
-            #color_scribble = self.blurish(img = color_scribble, color_blur_width = self.opt.color_blur_width)
             scribble = torch.from_numpy(scribble.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
 
             # forward propagation
             with torch.no_grad():
                 out = generator(img_l, scribble)
             
-            if isinstance(out, tuple):
-                img_out = out[0]
-                seg_out = out[1]
-            else:
-                img_out = out
+                if isinstance(out, tuple):
+                    img_out = out[0]
+                    seg_out = out[1]
+                else:
+                    img_out = out
                 
             # Save
             bgr = convert_lab_to_bgr(img_l, img_out)
@@ -213,3 +192,4 @@ if __name__ == "__main__":
     val_PSNR = val_PSNR / count
     val_SSIM = val_SSIM / count
     print('The average of %s, %s: PSNR: %.5f, SSIM: %.5f' % (opt.save_rgb_path, opt.tag, val_PSNR, val_SSIM))
+    print('%s, %s: PSNR: %.5f, SSIM: %.5f' % (opt.finetune_path, opt.tag, val_PSNR, val_SSIM))

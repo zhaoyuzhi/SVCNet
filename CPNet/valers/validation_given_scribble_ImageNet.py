@@ -39,10 +39,12 @@ if __name__ == "__main__":
     # General parameters
     parser.add_argument('--pre_train_cpnet_type', type = str, default = 'CPNet_VGG16_Seg', help = 'pre_train_cpnet_type')
     parser.add_argument('--save_rgb_path', type = str, \
-        default = './result_zero_scribble_ImageNet', \
+        default = './result_given_scribble_ImageNet', \
             help = 'save the generated rgb image to certain path')
     parser.add_argument('--finetune_path', type = str, \
-        default = './models_1st/CPNet_VGG16_Seg/cpnet_epoch20_batchsize32.pth', help = 'the load name of models')
+        default = './models_1st/CPNet_VGG16_Seg/cpnet_epoch20_batchsize32.pth', \
+            help = 'the load name of models')
+    parser.add_argument('--vgg_name', type = str, default = "./trained_models/vgg16_pretrained.pth", help = 'pre-trained vgg')
     # Training parameters
     parser.add_argument('--batch_size', type = int, default = 1, help = 'size of the batches')
     parser.add_argument('--num_workers', type = int, default = 1, help = 'number of cpu threads to use during batch generation')
@@ -61,29 +63,18 @@ if __name__ == "__main__":
     parser.add_argument('--base_root', type = str, \
         default = "/home/mybeast/Documents/zyz/dataset/ILSVRC2012_val_256", \
             help = 'the base testing folder')
-    parser.add_argument('--vgg_name', type = str, default = "../trained_models/vgg16_pretrained.pth", \
-        help = 'load the pre-trained vgg model with certain epoch')
-    parser.add_argument('--txt_root', type = str, \
-        default = "./txt/ctest10k.txt", \
+    parser.add_argument('--scribble_root', type = str, \
+        default = '../evaluation/fixed_color_scribbles/color_point40_color_width5/ImageNet', \
             help = 'the base training folder')
+    parser.add_argument('--txt_root', type = str, default = "./txt/ctest10k.txt", help = 'the base training folder')
     parser.add_argument('--crop_size_w', type = int, default = 256, help = 'size of image')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'size of image')
-    # color scribble parameters
-    parser.add_argument('--color_point', type = int, default = 0, help = 'number of color scribbles')
-    parser.add_argument('--color_width', type = int, default = 0, help = 'width of each color scribble')
-    parser.add_argument('--color_blur_width', type = int, default = 0, help = 'Gaussian blur width of each color scribble')
     opt = parser.parse_args()
     print(opt)
-
-    # ----------------------------------------
-    # ./models_1st/CPNet_VGG16_Seg_epoch20_num0: PSNR: 25.56651, average SSIM: 0.95597
-    # ./models_1st/CPNet_VGG16_Seg_epoch25_num0: PSNR: 25.68765, average SSIM: 0.95742
-    # ./models_1st/CPNet_VGG16_Seg_epoch27_num0: PSNR: 25.74020, average SSIM: 0.95800
-    # ./models_1st/CPNet_VGG16_Seg_epoch27_num40: PSNR: 30.08258, average SSIM: 0.97268
     
     save_rgb_sub_folder_name = opt.save_rgb_path
     utils.check_path(save_rgb_sub_folder_name)
-
+    
     # ----------------------------------------
     #       Initialize testing network
     # ----------------------------------------
@@ -97,7 +88,7 @@ if __name__ == "__main__":
     #       Initialize testing dataset
     # ----------------------------------------
     # Define the dataset
-    testset = dataset.ScribbleColorizationValDataset(opt)
+    testset = dataset.GivenScribbleColorizationValDataset(opt)
     dataloader = DataLoader(testset, batch_size = opt.batch_size, shuffle = True, num_workers = opt.num_workers, pin_memory = True)
     
     # ----------------------------------------
@@ -115,29 +106,24 @@ if __name__ == "__main__":
         gt_bgr = gt_bgr.cuda()                                          # out: [B, 2, 256, 256]
         color_scribble = color_scribble.cuda()                          # out: [B, 2, 256, 256]
         imgname = imgname[0]
-        color_scribble_save = color_scribble_save[0, :, :, :].numpy()
 
         # forward propagation
         with torch.no_grad():
             out = generator(grayscale, color_scribble)
-        
-        if isinstance(out, tuple):
-            img_out = out[0]
-            seg_out = out[1]
-        else:
-            img_out = out
 
+            if isinstance(out, tuple):
+                img_out = out[0]
+                seg_out = out[1]
+            else:
+                img_out = out
+            
         bgr = convert_lab_to_bgr(grayscale, img_out)
         save_rgb_name = os.path.join(save_rgb_sub_folder_name, imgname.replace('.JPEG', '.png'))
         cv2.imwrite(save_rgb_name, bgr)
-
-        '''
-        save_scribble_name = os.path.join(save_rgb_sub_folder_name, imgname.split('.')[0] + '_color_scribble.jpg')
-        cv2.imwrite(save_rgb_name, save_scribble_name)
-        seg = convert_seg(seg_out)
-        save_seg_name = os.path.join(save_rgb_sub_folder_name, imgname.split('.')[0] + '_seg.jpg')
-        cv2.imwrite(save_seg_name, seg)
-        '''
+        
+        #seg = convert_seg(seg_out)
+        #save_seg_name = os.path.join(save_rgb_sub_folder_name, imgname.split('.')[0] + '_seg.jpg')
+        #cv2.imwrite(save_seg_name, seg)
         
         # PSNR
         bgr = recover_ndarray_to_tensor(bgr).cuda()

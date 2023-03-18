@@ -1,13 +1,9 @@
 import argparse
 import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
 import cv2
 from PIL import Image
 import numpy as np
 import torch
-import torch.nn.functional as F
 
 import utils
 
@@ -83,10 +79,12 @@ if __name__ == "__main__":
     # ----------------------------------------
     parser = argparse.ArgumentParser()
     # General parameters
-    parser.add_argument('--pre_train_cpnet_type', type = str, default = 'CPNet_VGG16', help = 'pre_train_cpnet_type')
+    parser.add_argument('--pre_train_cpnet_type', type = str, default = 'CPNet_VGG16_Seg', help = 'pre_train_cpnet_type')
     parser.add_argument('--tag', type = str, default = 'DAVIS', help = 'DAVIS | videvo')
     parser.add_argument('--finetune_path', type = str, \
-        default = './models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', help = 'the load name of models')
+        default = './models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', \
+            help = 'the load name of models')
+    parser.add_argument('--vgg_name', type = str, default = "./trained_models/vgg16_pretrained.pth", help = 'pre-trained vgg')
     # Network parameters
     parser.add_argument('--in_channels', type = int, default = 1, help = 'input RGB image')
     parser.add_argument('--scribble_channels', type = int, default = 2, help = 'input scribble image')
@@ -102,11 +100,7 @@ if __name__ == "__main__":
     parser.add_argument('--base_root', type = str, \
         default = '/home/zyz/Documents/SVCNet/2dataset_RGB', \
             help = 'the base training folder')
-    parser.add_argument('--vgg_name', type = str, default = "../trained_models/vgg16_pretrained.pth", \
-        help = 'load the pre-trained vgg model with certain epoch')
-    parser.add_argument('--txt_root', type = str, \
-        default = "./txt", \
-            help = 'the base training folder')
+    parser.add_argument('--txt_root', type = str, default = "./txt", help = 'the base training folder')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'single patch size') # second stage (128p, 256p, 448p): 128, 256, 448
     parser.add_argument('--crop_size_w', type = int, default = 448, help = 'single patch size') # second stage (128p, 256p, 448p): 256, 448, 832
     # color scribble parameters
@@ -149,13 +143,9 @@ if __name__ == "__main__":
             img = Image.open(img_path).convert('RGB')
             img = np.array(img)
             img_grayscale = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
+            
             gt_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
             gt_bgr = torch.from_numpy(gt_bgr.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
-
-            gt_lab = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
-            gt_ab = np.concatenate((gt_lab[:, :, [1]], gt_lab[:, :, [2]]), axis = 2)
-            gt_ab = torch.from_numpy(gt_ab.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
 
             img = cv2.resize(img, (opt.crop_size_w, opt.crop_size_h), interpolation = cv2.INTER_CUBIC)
             lab = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
@@ -183,11 +173,10 @@ if __name__ == "__main__":
                         img_out = out
                     
                     # PSNR
-                    img_out = F.interpolate(img_out, size = [gt_ab.shape[2], gt_ab.shape[3]], mode = 'bilinear')
-                    assert img_out.shape == gt_ab.shape
-                    this_PSNR = utils.psnr(img_out, gt_ab, 1) * gt_ab.shape[0]
+                    assert img_out.shape == img_ab.shape
+                    this_PSNR = utils.psnr(img_out, img_ab, 1) * img_ab.shape[0]
                     val_PSNR_list[j] = val_PSNR_list[j] + this_PSNR
-                    this_SSIM = utils.ssim(img_out, gt_ab) * gt_ab.shape[0]
+                    this_SSIM = utils.ssim(img_out, img_ab) * img_ab.shape[0]
                     val_SSIM_list[j] = val_SSIM_list[j] + this_SSIM
                     #print(j, this_PSNR, this_SSIM)
             

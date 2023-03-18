@@ -1,7 +1,7 @@
-CUDA_VISIBLE_DEVICES=0 python -u train.py \
+python train.py \
 --pre_train_cpnet_type 'CPNet_VGG16_Seg' \
 --pre_train_ssnet_type 'SSNet' \
---multi_gpu False \
+--multi_gpu True \
 --cudnn_benchmark True \
 --save_path './models' \
 --sample_path './samples' \
@@ -19,19 +19,19 @@ CUDA_VISIBLE_DEVICES=0 python -u train.py \
 --pwcnet_path './trained_models/PWCNet/pwcNet-default.pytorch' \
 --perceptual_path './trained_models/vgg16_pretrained.pth' \
 --vgg_name './trained_models/vgg16_pretrained.pth' \
---epochs 11 \
+--epochs 21 \
 --batch_size 1 \
---lr_g_cpnet 0 \
+--lr_g_cpnet 1e-6 \
 --lr_g_ssnet 5e-5 \
 --lr_decrease_mode 'epoch' \
 --lr_decrease_epoch 5 \
 --lr_decrease_factor 0.5 \
 --num_workers 8 \
 --lambda_l1 1 \
---lambda_seg 0 \
---lambda_tv 10 \
---lambda_flow_short 0.01 \
---lambda_flow_long 0.01 \
+--lambda_seg 0.1 \
+--lambda_tv 0 \
+--lambda_flow_short 0 \
+--lambda_flow_long 0 \
 --lambda_reg 1 \
 --mask_para 200 \
 --baseroot '/media/zyz/DATADRIVE1/dataset/vimeo_septuplet/sequences' \

@@ -6,9 +6,7 @@ import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
 from torch.utils.data import DataLoader
-import itertools
 
-import network
 import dataset
 import utils
 

@@ -3,7 +3,6 @@ import os
 import numpy as np
 import cv2
 from PIL import Image
-import torch
 
 # multi-layer folder
 def check_path(path):

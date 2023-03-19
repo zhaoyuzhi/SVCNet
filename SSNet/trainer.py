@@ -1,14 +1,11 @@
 import time
 import datetime
-import itertools
 import os
 import cv2
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
-import torch.autograd as autograd
 from torch.utils.data import DataLoader
 import torch.backends.cudnn as cudnn
 import logging

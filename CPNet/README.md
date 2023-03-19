@@ -4,12 +4,12 @@
 
 Make sure you have installed the **svcnet** requirement and download the training data.
 
-The warm-up training includes two steps. You can start the training on ImageNet dataset by running:
+The warm-up training includes two steps. You can start it on the ImageNet dataset by running:
 ```bash
 sh run_1st.sh
 ```
 
-After the 1st training step is done, running the following code on DAVIS-Videvo dataset:
+After the 1st step is done, running the following code for 2nd step on the DAVIS-Videvo dataset:
 ```bash
 sh run_2nd.sh
 ```
@@ -20,7 +20,7 @@ The training for both steps take approximately 10 days on 8 NVIDIA Titan Xp GPUs
 
 ### 2.1 Basic usage
 
-You can download the pre-trained model via this [link]().
+You can download the pre-trained CPNet model via this [link]().
 
 By default you can use **validation.py** to validate the single image colorization quality of trained models on DAVIS-Videvo dataset validation set:
 ```bash
@@ -49,7 +49,7 @@ We include more validation scripts in **valers** sub-folder:
 
 - Validate the pre-trained models given fix color scribbles or fixed number of random color scribbles:
 
-| Name | Val set | Scribble |
+| Name | Validation set | Scribble |
 | ---- | :----: | :----: |
 | validation_given_scribble_DAVIS_videvo | DAVIS+Videvo | √ |
 | validation_given_scribble_ImageNet | ImageNet | × |
@@ -58,7 +58,7 @@ We include more validation scripts in **valers** sub-folder:
 
 - Validate the pre-trained model from a number of 0-40 random color scribbles:
 
-| Name | Val set | Scribble |
+| Name | Validation set | Scribble |
 | ---- | :----: | :----: |
 | validation_sweep_DAVIS_videvo_without_resize | DAVIS+Videvo | × |
 | validation_sweep_DAVIS_videvo | DAVIS+Videvo | × |

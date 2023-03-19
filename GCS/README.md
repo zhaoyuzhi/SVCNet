@@ -16,7 +16,7 @@ python generate_color_scribbles_ImageNet.py
 python generate_color_scribbles_DAVIS_videvo.py
 ```
 
-- Generate color scribbles for frames in arbitary videos:
+- Generate color scribbles for arbitary videos:
 ```bash
 python generate_color_scribbles_for_video.py
 ```

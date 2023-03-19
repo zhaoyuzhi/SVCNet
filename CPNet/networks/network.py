@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from network_module import *
-
+from networks.network_module import *
 import utils
 
 #-----------------------------------------------

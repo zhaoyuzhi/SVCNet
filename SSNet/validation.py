@@ -4,7 +4,6 @@ import cv2
 from PIL import Image
 import numpy as np
 import torch
-import copy
 
 import datasets.data_utils as dutils
 import networks.pwcnet as pwcnet

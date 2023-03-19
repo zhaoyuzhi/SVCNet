@@ -7,8 +7,8 @@ import torch.nn as nn
 import torch.nn.init as init
 import torchvision as tv
 
-import network
-from network_vgg import PerceptualNet, VGGFeaNet
+import networks.network as network
+from networks.network_vgg import PerceptualNet, VGGFeaNet
 
 def create_generator(opt):
     # Initialize the networks

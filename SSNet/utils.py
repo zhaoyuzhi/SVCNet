@@ -217,37 +217,25 @@ def sample(sample_folder, sample_name, img_list, name_list, pixel_max_cnt = 255,
     # sample_folder: the path that saves all the sample images
     # sample_name: the specific iteration of this group of images
     # img_list / name_list: lists that save all the files and names to be saved
-
     # Save image one-by-one
     for i in range(len(img_list)):
-
         img = img_list[i]
-
         # Process img_copy and do not destroy the data of img
         if i == 0 and img.shape[1] == 1:
             img = torch.cat((img, img, img), 1)
         img_copy = img.clone().data.permute(0, 2, 3, 1)[0, :, :, :].cpu().numpy()
         img_copy = (img_copy * pixel_max_cnt)
         img_copy = np.clip(img_copy, 0, pixel_max_cnt).astype(np.uint8)
-
         # The first one should be grayscale
         if i == 0:
             grayscale = img_copy.copy()
         else:
             img_copy = np.concatenate((grayscale[:, :, [0]], img_copy), axis = 2)
             img_copy = cv2.cvtColor(img_copy, cv2.COLOR_Lab2BGR)
-        
         # Save to certain path
         save_img_name = sample_name + '_' + name_list[i] + '.' + save_format
         save_img_path = os.path.join(sample_folder, save_img_name)
         cv2.imwrite(save_img_path, img_copy)
-
-def sample_nlimg(sample_folder, sample_name, img, name, save_format = 'png'):
-
-    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-    save_img_name = sample_name + '_' + name + '.' + save_format
-    save_img_path = os.path.join(sample_folder, save_img_name)
-    cv2.imwrite(save_img_path, img)
 
 def psnr(pred, target, pixel_max_cnt = 255):
     mse = torch.mul(target - pred, target - pred)
@@ -274,13 +262,6 @@ def ssim(pred, target):
 # ----------------------------------------
 #                  Others
 # ----------------------------------------
-def repackage_hidden(h):
-    """Wraps hidden states in new Variables, to detach them from their history."""
-    if isinstance(h, torch.Tensor):
-        return h.detach()
-    else:
-        return tuple(repackage_hidden(v) for v in h)
-
 def scribble_sampling(img, color_point, color_width):
     height = img.shape[0]
     width = img.shape[1]

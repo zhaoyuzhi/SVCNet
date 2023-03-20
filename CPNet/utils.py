@@ -4,8 +4,6 @@ import cv2
 import skimage.measure
 import torch
 import torch.nn as nn
-import torch.nn.init as init
-import torchvision as tv
 
 import networks.network as network
 from networks.network_vgg import PerceptualNet, VGGFeaNet

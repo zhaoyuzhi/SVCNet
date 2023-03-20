@@ -206,7 +206,6 @@ def Trainer(opt):
             loss_flow_short = 0
             loss_flow_long = 0
             loss_L1_large = 0
-            loss_reg = 0
 
             # Forward SSNet and compute loss functions
             # 0123456 - 1234567 - 2345678 - ... - 6789101112 (overall 7 groups)
@@ -303,11 +302,8 @@ def Trainer(opt):
                 if ii > 1:
                     loss_flow_long += criterion_L1(mask_zero_to_current * ssnet_t, mask_zero_to_current * ssnet_first_output_warp)
                 
-                # Compute the regularization loss
-                loss_reg += criterion_L1(residual, torch.zeros_like(residual).cuda())
-                
             # Overall Loss and optimize
-            loss = opt.lambda_l1 * loss_L1 + opt.lambda_tv * loss_TV + opt.lambda_flow_short * loss_flow_short + opt.lambda_flow_long * loss_flow_long + opt.lambda_reg * loss_reg
+            loss = opt.lambda_l1 * loss_L1 + opt.lambda_tv * loss_TV + opt.lambda_flow_short * loss_flow_short + opt.lambda_flow_long * loss_flow_long
             loss.backward()
             optimizer_cpnet.step()
             optimizer_ssnet.step()
@@ -319,12 +315,12 @@ def Trainer(opt):
             prev_time = time.time()
 
             # Print log
-            log_str = "[Epoch %d/%d] [Batch %d/%d] [L1 Loss: %.4f] [L1 Loss (SR): %.4f] [TV Loss: %.4f] [Flow Loss Short: %.4f] [Flow Loss Long: %.4f] [Regularization Loss: %.8f] Time_left: %s" % \
+            log_str = "[Epoch %d/%d] [Batch %d/%d] [L1 Loss: %.4f] [L1 Loss (SR): %.4f] [TV Loss: %.4f] [Flow Loss Short: %.4f] [Flow Loss Long: %.4f] Time_left: %s" % \
                 ((epoch + 1), opt.epochs, iteration, len(dataloader), loss_L1.item() / (ssnet_training_iter_per_batch), \
                         loss_L1_large.item() / (ssnet_training_iter_per_batch), loss_TV.item() / (ssnet_training_iter_per_batch), \
                             loss_flow_short.item() / (ssnet_training_iter_per_batch - 1), \
                                 loss_flow_long.item() / (ssnet_training_iter_per_batch - 2), \
-                                    loss_reg.item() / (ssnet_training_iter_per_batch), time_left)
+                                    time_left)
             
             print(log_str)
             logging.info(log_str)

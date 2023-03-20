@@ -4,7 +4,7 @@
 
 Make sure you have installed the **svcnet** requirement and download the training data.
 
-We omit warm-up pre-training codes for `Refinement Module` and `Super-resolution Module` due to simplicity. Instead, we provide the [pre-trained models]() of them for users to reproduce the training of the full SSNet.
+We omit warm-up pre-training codes for `Refinement Module` and `Super-resolution Module` due to simplicity. Instead, we provide the [pre-trained models](https://portland-my.sharepoint.com/:f:/g/personal/yzzhao2-c_my_cityu_edu_hk/EoAhNnlzoe1LkoI0CSlw9q8B-zOmJlhZUoxBVC3m3eiDUQ?e=WeTQHQ) of them for users to reproduce the training of the full SSNet.
 
 The joint training can be started by running:
 ```bash
@@ -15,7 +15,7 @@ The training for both steps take approximately 8 days on 8 NVIDIA Titan Xp GPUs 
 
 ## 2 Validation
 
-You can download the pre-trained CPNet model via this [link]() and the pre-trained SSNet model via this [link]().
+You can download the pre-trained CPNet model via this [link](https://portland-my.sharepoint.com/:u:/g/personal/yzzhao2-c_my_cityu_edu_hk/EXUIeeSbnqVJq7s4PU2emwABWfxLP1UKDHajSv9lGVH_3Q?e=q4aa8g) and the pre-trained SSNet model via this [link](https://portland-my.sharepoint.com/:u:/g/personal/yzzhao2-c_my_cityu_edu_hk/EaE2q8nnMv5Hv6qDJduc6_EB6VNe5DGwavHICUwwwlqS_A?e=V4zKII). Please generate color scribbles before validation and you can find some useful scripts under **GCS** folder.
 
 By default you can use **validation.py** to validate the video colorization quality of trained models:
 ```bash
@@ -46,11 +46,9 @@ Some parameters are concluded as:
 
 ## 3 Test
 
-You can download the pre-trained CPNet model via this [link]() and the pre-trained SSNet model via this [link]().
+You can download the pre-trained CPNet model via this [link](https://portland-my.sharepoint.com/:u:/g/personal/yzzhao2-c_my_cityu_edu_hk/EXUIeeSbnqVJq7s4PU2emwABWfxLP1UKDHajSv9lGVH_3Q?e=q4aa8g) and the pre-trained SSNet model via this [link](https://portland-my.sharepoint.com/:u:/g/personal/yzzhao2-c_my_cityu_edu_hk/EaE2q8nnMv5Hv6qDJduc6_EB6VNe5DGwavHICUwwwlqS_A?e=V4zKII). The grayscale testing video frames and color scribbles are included in **test_data** folder.
 
 By default you can use **test.py** to test the video colorization quality of trained models:
 ```bash
 python test.py
 ```
-
-We have included a video sample and you can fully re-produce the results given in the folder.

@@ -3,14 +3,14 @@ num_of_scribbles=40
 
 python train.py \
 --pre_train_cpnet_type ${opt} \
---base_root ./dataset/DAVIS_videvo_train \
---seg_root ./dataset/DAVIS_videvo_fusion_saliency_maps_and_segmentations \
+--base_root ./data/DAVIS_videvo/DAVIS_videvo_train \
+--seg_root ./data/DAVIS_videvo/DAVIS_videvo_fusion_saliency_maps_and_segmentations \
 --save_path models_2nd_dv_256p \
 --sample_path samples_2nd_dv_256p \
 --multi_gpu True \
 --checkpoint_interval 100 \
 --finetune_path models_1st/${opt}/cpnet_epoch20_batchsize32.pth \
---epochs 1001 \
+--epochs 1000 \
 --batch_size 4 \
 --lr_g 5e-5 \
 --lambda_l1 1 \

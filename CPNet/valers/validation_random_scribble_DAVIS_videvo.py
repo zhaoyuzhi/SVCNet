@@ -86,9 +86,9 @@ if __name__ == "__main__":
         default = './result_random_scribble_DAVIS_videvo', \
             help = 'save the generated rgb image to certain path')
     parser.add_argument('--finetune_path', type = str, \
-        default = './models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', \
+        default = './trained_models/CPNet/models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', \
             help = 'the load name of models')
-    parser.add_argument('--vgg_name', type = str, default = "./trained_models/vgg16_pretrained.pth", help = 'pre-trained vgg')
+    parser.add_argument('--vgg_name', type = str, default = "./trained_models/Others/vgg16_pretrained.pth", help = 'pre-trained vgg')
     # Network parameters
     parser.add_argument('--in_channels', type = int, default = 1, help = 'input RGB image')
     parser.add_argument('--scribble_channels', type = int, default = 2, help = 'input scribble image')
@@ -102,8 +102,8 @@ if __name__ == "__main__":
     parser.add_argument('--norm_d', type = str, default = 'bn', help = 'normalization type')
     # Dataset parameters
     parser.add_argument('--base_root', type = str, \
-        default = '/home/zyz/Documents/SVCNet/2dataset_RGB', \
-            help = 'the base training folder')
+        default = './data/DAVIS_Videvo/val', \
+            help = 'the base validation folder')
     parser.add_argument('--txt_root', type = str, default = "./txt", help = 'the base training folder')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'single patch size') # second stage (128p, 256p, 448p): 128, 256, 448
     parser.add_argument('--crop_size_w', type = int, default = 448, help = 'single patch size') # second stage (128p, 256p, 448p): 256, 448, 832

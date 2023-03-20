@@ -21,12 +21,61 @@ def define_dataset(opt):
     print('There are %d videos in the test set.' % (len(imgroot)))
     return imgroot
 
+def color_scribble(img, color_point, color_width):
+    height = img.shape[0]
+    width = img.shape[1]
+    channels = img.shape[2]
+    scribble = np.zeros((height, width, channels), np.uint8)
+    if color_point > 0:
+        times = np.random.randint(color_point)
+        for i in range(times):
+            # random selection
+            rand_h = np.random.randint(height)
+            rand_w = np.random.randint(width)
+            # define min and max
+            min_h = rand_h - (color_width - 1) // 2
+            max_h = rand_h + (color_width - 1) // 2
+            min_w = rand_w - (color_width - 1) // 2
+            max_w = rand_w + (color_width - 1) // 2
+            min_h = max(min_h, 0)
+            min_w = max(min_w, 0)
+            max_h = min(max_h, height)
+            max_w = min(max_w, width)
+            # attach color points
+            scribble[min_h:max_h, min_w:max_w, :] = img[rand_h, rand_w, :]
+    return scribble
+    
+def recover_ndarray_to_tensor(img):
+    img = torch.from_numpy(img.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0)
+    return img
+
 def convert_lab_to_bgr(input_img, out_img):
     input_img = input_img[0, :, :, :].data.cpu().numpy().transpose(1, 2, 0)             # 256 * 256 * 1
     out_img = out_img[0, :, :, :].data.cpu().numpy().transpose(1, 2, 0)                 # 256 * 256 * 2
     out_img = np.concatenate((input_img, out_img), axis = 2)                            # 256 * 256 * 3
     out_img = (out_img * 255).astype(np.uint8)
     out_img = cv2.cvtColor(out_img, cv2.COLOR_Lab2BGR)                                  # 256 * 256 * 3 (√)
+    return out_img
+
+def resize_Lab(L_large_size, input_small_size, input_rgb_tag = True):
+    if len(L_large_size.shape) == 2:
+        L_large_size = L_large_size[:, :, np.newaxis]
+    assert len(L_large_size.shape) == 3   # H, W, 1
+    # if input_rgb_tag == True, the input_small_size is in the RGB color space
+    if input_rgb_tag:
+        input_small_size = cv2.cvtColor(input_small_size, cv2.COLOR_BGR2Lab)
+        input_small_size_ab = np.concatenate((input_small_size[:, :, [1]], input_small_size[:, :, [2]]), axis = 2)
+    # if input_rgb_tag == False, the input_small_size is the ab components in the Lab color space
+    else:
+        input_small_size_ab = input_small_size
+    input_small_size_ab = cv2.resize(input_small_size_ab, (L_large_size.shape[1], L_large_size.shape[0]))
+    combine_Lab = np.concatenate((L_large_size, input_small_size_ab), axis = 2)
+    combine_Lab = cv2.cvtColor(combine_Lab, cv2.COLOR_Lab2BGR)
+    return combine_Lab
+
+def convert_seg(out_img):
+    out_img = out_img[0, 0, :, :].data.cpu().numpy()                                    # 256 * 256 * 1
+    out_img = (out_img * 255).astype(np.uint8)
     return out_img
 
 if __name__ == "__main__":
@@ -36,21 +85,21 @@ if __name__ == "__main__":
     # ----------------------------------------
     parser = argparse.ArgumentParser()
     # General parameters
-    parser.add_argument('--tag', type = str, \
-        default = 'videvo', \
-            help = 'DAVIS | videvo')
+    parser.add_argument('--pre_train_cpnet_type', type = str, default = 'CPNet_VGG16_Seg', help = 'pre_train_cpnet_type')
+    parser.add_argument('--tag', type = str, default = 'DAVIS', help = 'DAVIS | videvo')
     parser.add_argument('--save_rgb_path', type = str, \
-        default = './val_result', \
+        default = './result_given_scribble_DAVIS_videvo', \
             help = 'save the generated rgb image to certain path')
     parser.add_argument('--finetune_path', type = str, \
-        default = './models/cpnet_epoch40_batchsize32.pth', \
+        default = './trained_models/CPNet/models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', \
             help = 'the load name of models')
+    parser.add_argument('--vgg_name', type = str, default = "./trained_models/Others/vgg16_pretrained.pth", help = 'pre-trained vgg')
     # Network parameters
     parser.add_argument('--in_channels', type = int, default = 1, help = 'input RGB image')
     parser.add_argument('--scribble_channels', type = int, default = 2, help = 'input scribble image')
     parser.add_argument('--out_channels', type = int, default = 2, help = 'output RGB image')
-    parser.add_argument('--start_channels', type = int, default = 32, help = 'latent channels')
-    parser.add_argument('--mid_channels', type = int, default = 128, help = 'latent channels')
+    parser.add_argument('--seg_channels', type = int, default = 1, help = 'output segmentation image')
+    parser.add_argument('--start_channels', type = int, default = 64, help = 'latent channels')
     parser.add_argument('--pad', type = str, default = 'zero', help = 'the padding type')
     parser.add_argument('--activ_g', type = str, default = 'lrelu', help = 'the activation type')
     parser.add_argument('--activ_d', type = str, default = 'lrelu', help = 'the activation type')
@@ -58,12 +107,11 @@ if __name__ == "__main__":
     parser.add_argument('--norm_d', type = str, default = 'bn', help = 'normalization type')
     # Dataset parameters
     parser.add_argument('--base_root', type = str, \
-        default = 'F:\\dataset, my paper related\\VCGAN dataset\\test\\input', \
-            help = 'the base training folder')
+        default = './data/DAVIS_Videvo/val', \
+            help = 'the base validation folder')
     parser.add_argument('--scribble_root', type = str, \
-        default = "E:\\code\\Scribble-based Video Colorization\\experiment\\fixed_color_scribbles", \
-            help = 'the base training folder')
-    parser.add_argument('--vgg_name', type = str, default = "./trained_models/vgg16_pretrained.pth", help = 'pre-trained vgg')
+        default = './color_point40_color_width5_256p', \
+            help = 'the base validation folder')
     parser.add_argument('--txt_root', type = str, default = "./txt", help = 'the base training folder')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'single patch size') # second stage (128p, 256p, 448p): 128, 256, 448
     parser.add_argument('--crop_size_w', type = int, default = 448, help = 'single patch size') # second stage (128p, 256p, 448p): 256, 448, 832
@@ -88,38 +136,69 @@ if __name__ == "__main__":
     # ----------------------------------------
     #                 Testing
     # ----------------------------------------
+    # forward
+    val_PSNR = 0
+    val_SSIM = 0
+    count = 0
+    
     # Choose a category of dataset, it is fair for each dataset to be chosen
     for index in range(len(imgroot)):
         N = len(imgroot[index])
         for i in range(N):
             # Read images
             img_path = os.path.join(opt.base_root, opt.tag, imgroot[index][i].split('/')[0], imgroot[index][i].split('/')[1])
-            scribble_path = os.path.join(opt.scribble_root, opt.tag, imgroot[index][i].split('/')[0], imgroot[index][i].split('/')[1].split('.')[0] + '_128p.png')
             img = Image.open(img_path).convert('RGB')
             img = np.array(img)
-            #h, w = img.shape[0], img.shape[1]
+            img_grayscale = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
+            gt_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            gt_bgr = torch.from_numpy(gt_bgr.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
+
             img = cv2.resize(img, (opt.crop_size_w, opt.crop_size_h), interpolation = cv2.INTER_CUBIC)
             lab = cv2.cvtColor(img, cv2.COLOR_RGB2Lab)
             img_l = lab[:, :, [0]]
             img_ab = np.concatenate((lab[:, :, [1]], lab[:, :, [2]]), axis = 2)
             img_l = torch.from_numpy(img_l.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
+            
+            scribble_path = os.path.join(opt.scribble_root, opt.tag, imgroot[index][i].split('/')[0], imgroot[index][i].split('/')[1].split('.')[0] + '_256p.png')
             scribble = Image.open(scribble_path).convert('RGB')
             scribble = np.array(scribble)
             scribble = cv2.cvtColor(scribble, cv2.COLOR_RGB2Lab)
             scribble = np.concatenate((scribble[:, :, [1]], scribble[:, :, [2]]), axis = 2)
             scribble = torch.from_numpy(scribble.astype(np.float32) / 255.0).permute(2, 0, 1).unsqueeze(0).contiguous().cuda()
-            
-            # Inference
-            with torch.no_grad():
-                col = generator(img_l, scribble)
-                
-            # Save
-            bgr = convert_lab_to_bgr(img_l, col)
 
+            # forward propagation
+            with torch.no_grad():
+                out = generator(img_l, scribble)
+            
+                if isinstance(out, tuple):
+                    img_out = out[0]
+                    seg_out = out[1]
+                else:
+                    img_out = out
+            
+            # Save
+            bgr = convert_lab_to_bgr(img_l, img_out)
             save_rgb_sub_folder_name = os.path.join(opt.save_rgb_path, opt.tag, imgroot[index][i].split('/')[0])
             utils.check_path(save_rgb_sub_folder_name)
-
-            save_rgb_name = os.path.join(save_rgb_sub_folder_name, imgroot[index][i].split('/')[1].split('.')[0] + '_col_' + str(opt.crop_size_h) + 'p.png')
+            save_rgb_name = os.path.join(save_rgb_sub_folder_name, imgroot[index][i].split('/')[1].split('.')[0] + '.png')
+            bgr = resize_Lab(L_large_size = img_grayscale, input_small_size = bgr, input_rgb_tag = True)
             cv2.imwrite(save_rgb_name, bgr)
-            
-            print('Video %d, Frame %d is saved' % (index, i))
+
+            #seg = convert_seg(seg_out)
+            #save_seg_name = os.path.join(save_rgb_sub_folder_name, imgroot[index][i].split('/')[1].split('.')[0] + '_seg.jpg')
+            #cv2.imwrite(save_seg_name, seg)
+
+            # PSNR
+            count = count + 1
+            bgr = recover_ndarray_to_tensor(bgr).cuda()
+            assert bgr.shape == gt_bgr.shape
+            this_PSNR = utils.psnr(bgr, gt_bgr, 1) * gt_bgr.shape[0]
+            val_PSNR += this_PSNR
+            this_SSIM = utils.ssim(bgr, gt_bgr) * gt_bgr.shape[0]
+            val_SSIM += this_SSIM
+            print('The %d-th video, %d-th frame: PSNR: %.5f, SSIM: %.5f' % (index, i, this_PSNR, this_SSIM))
+
+    val_PSNR = val_PSNR / count
+    val_SSIM = val_SSIM / count
+    print('The average of %s, %s: PSNR: %.5f, SSIM: %.5f' % (opt.save_rgb_path, opt.tag, val_PSNR, val_SSIM))

@@ -8,13 +8,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # General parameters
     parser.add_argument('--pre_train_cpnet_type', type = str, default = 'CPNet_VGG16_Seg', help = 'pre_train_cpnet_type')
-    parser.add_argument('--save_path', type = str, default = 'models', help = 'the save path for trained models')
-    parser.add_argument('--sample_path', type = str, default = 'samples', help = 'the save path for trained models')
-    parser.add_argument('--multi_gpu', type = bool, default = False, help = 'nn.Parallel needs or not')
-    parser.add_argument('--gpu_ids', type = str, default = '0, 1, 2, 3', help = 'gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+    parser.add_argument('--save_path', type = str, default = './models', help = 'the save path for trained models')
+    parser.add_argument('--sample_path', type = str, default = './samples', help = 'the save path for trained models')
+    parser.add_argument('--multi_gpu', type = bool, default = True, help = 'nn.Parallel needs or not')
     parser.add_argument('--cudnn_benchmark', type = bool, default = True, help = 'True for unchanged input data type')
     parser.add_argument('--checkpoint_interval', type = int, default = 1, help = 'interval between model checkpoints')
     parser.add_argument('--finetune_path', type = str, default = '', help = 'the load name of models')
+    parser.add_argument('--vgg_name', type = str, default = './trained_models/Others/vgg16_pretrained.pth', help = 'the load name of models')
     # Training parameters
     parser.add_argument('--epochs', type = int, default = 40, help = 'number of epochs of training')
     parser.add_argument('--epochs_overhead', type = int, default = 0, help = 'number of trained epochs')
@@ -43,12 +43,8 @@ if __name__ == "__main__":
     parser.add_argument('--init_type', type = str, default = 'xavier', help = 'the initialization type')
     parser.add_argument('--init_gain', type = float, default = 0.02, help = 'the initialization gain')
     # Dataset parameters
-    parser.add_argument('--base_root', type = str, default = "C:\\Users\\yzzha\\Desktop\\dataset\\ILSVRC2012_val_256", \
-        help = 'the base training folder')
-    parser.add_argument('--seg_root', type = str, default = "C:\\Users\\yzzha\\Desktop\\dataset\\ILSVRC2012_val_256", \
-        help = 'the base training folder')
-    parser.add_argument('--vgg_name', type = str, default = "./trained_models/vgg16_pretrained.pth", \
-        help = 'load the pre-trained vgg model with certain epoch')
+    parser.add_argument('--base_root', type = str, default = "./data/ILSVRC2012/ILSVRC2012_train_256", help = 'the base training folder')
+    parser.add_argument('--seg_root', type = str, default = "./data/ILSVRC2012/ILSVRC2012_train_256_saliencymap", help = 'the base training folder')
     parser.add_argument('--crop_size_w', type = int, default = 256, help = 'size of image')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'size of image')
     # color scribble parameters

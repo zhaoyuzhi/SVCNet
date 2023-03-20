@@ -20,7 +20,7 @@ The training for both steps take approximately 10 days on 8 NVIDIA Titan Xp GPUs
 
 ### 2.1 Basic usage
 
-You can download the pre-trained CPNet model via this [link]().
+You can download the pre-trained CPNet model via this [link](https://portland-my.sharepoint.com/:u:/g/personal/yzzhao2-c_my_cityu_edu_hk/EXUIeeSbnqVJq7s4PU2emwABWfxLP1UKDHajSv9lGVH_3Q?e=q4aa8g). Please generate color scribbles before validation and you can find some useful scripts under **GCS** folder.
 
 By default you can use **validation.py** to validate the single image colorization quality of trained models on DAVIS-Videvo dataset validation set:
 ```bash

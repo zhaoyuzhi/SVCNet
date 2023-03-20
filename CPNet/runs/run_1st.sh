@@ -3,13 +3,13 @@ num_of_scribbles=40
 
 python train.py \
 --pre_train_cpnet_type ${opt} \
---base_root ./dataset/ILSVRC2012_train_256 \
---seg_root ./dataset/ILSVRC2012_train_256_saliencymap \
+--base_root ./data/ILSVRC2012/ILSVRC2012_train_256 \
+--seg_root ./data/ILSVRC2012/ILSVRC2012_train_256_saliencymap \
 --save_path models_1st \
 --sample_path samples_1st \
 --multi_gpu True \
 --checkpoint_interval 1 \
---epochs 41 \
+--epochs 20 \
 --batch_size 4 \
 --lr_g 1e-4 \
 --lambda_l1 1 \

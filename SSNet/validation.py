@@ -142,10 +142,10 @@ if __name__ == "__main__":
     parser.add_argument('--save_rgb_path', type = str, \
         default = './val_result', \
             help = 'save the generated rgb image to certain path')
-    parser.add_argument('--cpnet_path', type = str, default = '../trained_models/CPNet/models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', help = 'the load name of models')
-    parser.add_argument('--ssnet_path', type = str, default = './trained_ssnet/ssnet_epoch2000_bs1.pth', help = 'the load name of models')
-    parser.add_argument('--pwcnet_path', type = str, default = '../trained_models/PWCNet/pwcNet-default.pytorch', help = 'the load name of models')
-    parser.add_argument('--vgg_name', type = str, default = '../trained_models/vgg16_pretrained.pth', help = 'the load name of models')
+    parser.add_argument('--cpnet_path', type = str, default = './trained_models/CPNet/models_2nd_dv_256p/CPNet_VGG16_Seg/cpnet_epoch1000_batchsize32.pth', help = 'the load name of models')
+    parser.add_argument('--ssnet_path', type = str, default = './trained_ssnet/SSNet/ssnet_epoch2000_bs8.pth', help = 'the load name of models')
+    parser.add_argument('--pwcnet_path', type = str, default = './trained_models/PWCNet/pwcNet-default.pytorch', help = 'the load name of models')
+    parser.add_argument('--vgg_name', type = str, default = './trained_models/Others/vgg16_pretrained.pth', help = 'the load name of models')
     # Network parameters
     parser.add_argument('--in_channels', type = int, default = 1, help = 'input RGB image')
     parser.add_argument('--scribble_channels', type = int, default = 2, help = 'input scribble image')
@@ -175,11 +175,11 @@ if __name__ == "__main__":
     parser.add_argument('--mask_para', type = float, default = 200, help = 'coefficient for visible mask')
     # Dataset parameters
     parser.add_argument('--base_root', type = str, \
-        default = 'H:\\dataset, task related\\VCGAN dataset\\test', \
-            help = 'the base training folder')
+        default = './data/DAVIS_Videvo/val', \
+            help = 'the base validation folder')
     parser.add_argument('--scribble_root', type = str, \
-        default = 'H:\\submitted papers\\SVCNet\\code_color_scribbles\\color_point40_color_width5_256p', \
-            help = 'the base training folder')
+        default = './color_point40_color_width5_256p', \
+            help = 'the base validation folder')
     parser.add_argument('--txt_root', type = str, default = './txt', help = 'the base training folder')
     parser.add_argument('--iter_frames', type = int, default = 7, help = 'number of iter_frames in one iteration; +1 since the first frame is not counted')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'single patch size') # second stage (128p, 256p, 448p): 128, 256, 448

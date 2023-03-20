@@ -63,9 +63,9 @@ if __name__ == "__main__":
     # General parameters
     parser.add_argument('--pre_train_cpnet_type', type = str, default = 'CPNet_VGG16_Seg', help = 'pre_train_cpnet_type')
     parser.add_argument('--finetune_path', type = str, \
-        default = './models_1st/CPNet_VGG16_Seg/cpnet_epoch20_batchsize32.pth', \
+        default = './trained_models/CPNet/models_1st/CPNet_VGG16_Seg/cpnet_epoch20_batchsize32.pth', \
             help = 'the load name of models')
-    parser.add_argument('--vgg_name', type = str, default = "./trained_models/vgg16_pretrained.pth", help = 'pre-trained vgg')
+    parser.add_argument('--vgg_name', type = str, default = "./trained_models/Others/vgg16_pretrained.pth", help = 'pre-trained vgg')
     # Training parameters
     parser.add_argument('--batch_size', type = int, default = 1, help = 'size of the batches')
     parser.add_argument('--num_workers', type = int, default = 1, help = 'number of cpu threads to use during batch generation')
@@ -82,8 +82,8 @@ if __name__ == "__main__":
     parser.add_argument('--norm_d', type = str, default = 'bn', help = 'normalization type')
     # Dataset parameters
     parser.add_argument('--base_root', type = str, \
-        default = "/home/zyz/Documents/dataset/ILSVRC2012_val_256", \
-            help = 'the base testing folder')
+        default = "./data/ILSVRC2012/ILSVRC2012_val_256", \
+            help = 'the base validation folder')
     parser.add_argument('--txt_root', type = str, default = "./txt/ctest10k.txt", help = 'the base training folder')
     parser.add_argument('--crop_size_w', type = int, default = 256, help = 'size of image')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'size of image')

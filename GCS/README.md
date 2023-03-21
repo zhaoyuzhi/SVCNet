@@ -2,29 +2,37 @@
 
 ## 1 Run
 
-Make sure **svcnet** environment is installed.
+Make sure you have installed the **svcnet** environment.
 
-Copy the **pwcNet-default.pytorch** file under this sub-folder, or change the **--pwcnet_path** parameter.
+### 1.1 Run for image datasets
 
-- Generate color scribbles for ImageNet images:
+You can generate color scribbles for ImageNet images by:
 ```bash
 python generate_color_scribbles_ImageNet.py
 ```
+Actually, it adapts to arbitary image datasets.
+
+### 1.2 Run for video datasets
+
+Copy the **pwcNet-default.pytorch** file under this sub-folder, or change the **--pwcnet_path** parameter.
 
 - Generate color scribbles for DAVIS-Videvo frames:
 ```bash
 python generate_color_scribbles_DAVIS_videvo.py
 ```
 
-- Generate color scribbles for arbitary videos:
+- Generate color scribbles for arbitary video frames (a pre-defined color scribble initial image is needed):
 ```bash
-python generate_color_scribbles_for_video.py
+python generate_color_scribbles_video.py
 ```
 
-- Generate different color scribbles from a given scribble folder:
+### 1.3 Generate diverse color scribbles
+
+You can generate more different color scribbles from generated color scribbles:
 ```bash
 python mapping_diverse_color_scribbles.py
 ```
+We have already defined some transformation functions (mapping_func1 - mapping_func4) in the script and you can replace them.
 
 ## 2 Visualization
 

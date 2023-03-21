@@ -7,6 +7,21 @@ import torch
 
 import pwcnet
 
+def create_pwcnet(opt):
+    # Initialize the network
+    flownet = pwcnet.PWCNet().eval()
+    # Load a pre-trained network
+    data = torch.load(opt.pwcnet_path)
+    if 'state_dict' in data.keys():
+        flownet.load_state_dict(data['state_dict'])
+    else:
+        flownet.load_state_dict(data)
+    print('PWCNet is loaded!')
+    # It does not gradient
+    for param in flownet.parameters():
+        param.requires_grad = False
+    return flownet
+
 def text_readlines(filename):
     # Try to read a txt file and return a list.Return [] if there was a mistake.
     try:
@@ -56,30 +71,6 @@ def blurish(img, color_blur_width):
     img = cv2.GaussianBlur(img, (color_blur_width, color_blur_width), 0)
     return img
 
-'''
-# Color map
-color_scribble = self.color_scribble(img = img, color_point = self.opt.color_point, color_width = self.opt.color_width)
-lab = cv2.cvtColor(color_scribble, cv2.COLOR_RGB2Lab)
-color_scribble_ab = np.concatenate((lab[:, :, [1]], lab[:, :, [2]]), axis = 2)
-#color_scribble = self.blurish(img = color_scribble, color_blur_width = self.opt.color_blur_width)
-color_scribble_ab = torch.from_numpy(color_scribble_ab.astype(np.float32) / 255.0).permute(2, 0, 1).contiguous()
-'''
-
-def create_pwcnet(opt):
-    # Initialize the network
-    flownet = pwcnet.PWCNet().eval()
-    # Load a pre-trained network
-    data = torch.load(opt.pwcnet_path)
-    if 'state_dict' in data.keys():
-        flownet.load_state_dict(data['state_dict'])
-    else:
-        flownet.load_state_dict(data)
-    print('PWCNet is loaded!')
-    # It does not gradient
-    for param in flownet.parameters():
-        param.requires_grad = False
-    return flownet
-
 def check_path(path):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -100,17 +91,17 @@ if __name__ == "__main__":
         default = './txt', \
             help = 'the path that contains class.txt')
     parser.add_argument('--baseroot', type = str, \
-        default = 'F:\\dataset, task related\\VCGAN dataset\\test', \
+        default = './data/DAVIS_Videvo/val', \
             help = 'baseroot')
     parser.add_argument('--saveroot', type = str, \
-        default = "./color_point40_color_width5_64p", \
+        default = "./color_point40_color_width5_256p", \
             help = 'saveroot')
     parser.add_argument('--show', type = bool, default = True, help = 'show image color scribbles')
-    parser.add_argument('--crop_size_h', type = int, default = 64, help = 'single patch size') # 256, 128, 64
-    parser.add_argument('--crop_size_w', type = int, default = 128, help = 'single patch size') # 448, 224, 128
+    parser.add_argument('--crop_size_h', type = int, default = 256, help = 'single patch size') # 256, 128, 64
+    parser.add_argument('--crop_size_w', type = int, default = 448, help = 'single patch size') # 448, 224, 128
     parser.add_argument('--color_point', type = int, default = 40, help = 'number of color scribbles')
-    parser.add_argument('--color_width', type = int, default = 3, help = 'width of each color scribble') # 5, 3
-    parser.add_argument('--color_blur_width', type = int, default = 3, help = 'Gaussian blur width of each color scribble') # 3
+    parser.add_argument('--color_width', type = int, default = 5, help = 'width of each color scribble') # 5, 3
+    parser.add_argument('--color_blur_width', type = int, default = 11, help = 'Gaussian blur width of each color scribble') # 3
     opt = parser.parse_args()
     print(opt)
 

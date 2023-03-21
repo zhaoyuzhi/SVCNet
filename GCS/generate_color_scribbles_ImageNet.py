@@ -69,15 +69,6 @@ def blurish(img, color_blur_width):
     img = cv2.GaussianBlur(img, (color_blur_width, color_blur_width), 0)
     return img
 
-'''
-# Color map
-color_scribble = self.color_scribble(img = img, color_point = self.opt.color_point, color_width = self.opt.color_width)
-lab = cv2.cvtColor(color_scribble, cv2.COLOR_RGB2Lab)
-color_scribble_ab = np.concatenate((lab[:, :, [1]], lab[:, :, [2]]), axis = 2)
-#color_scribble = self.blurish(img = color_scribble, color_blur_width = self.opt.color_blur_width)
-color_scribble_ab = torch.from_numpy(color_scribble_ab.astype(np.float32) / 255.0).permute(2, 0, 1).contiguous()
-'''
-
 def check_path(path):
     if not os.path.exists(path):
         os.makedirs(path)
@@ -91,14 +82,11 @@ if __name__ == "__main__":
     parser.add_argument('--tag', type = str, \
         default = 'videvo', \
             help = 'DAVIS | videvo')
-    parser.add_argument('--txt_path', type = str, \
-        default = './txt', \
-            help = 'the path that contains class.txt')
     parser.add_argument('--baseroot', type = str, \
-        default = '/home/zyz/Documents/dataset/ILSVRC2012_val_256', \
+        default = './data/ILSVRC2012/ILSVRC2012_val_256', \
             help = 'baseroot')
     parser.add_argument('--saveroot', type = str, \
-        default = "./color_point40_color_width5/ImageNet", \
+        default = "./color_point40_color_width5_ImageNet", \
             help = 'saveroot')
     parser.add_argument('--show', type = bool, default = True, help = 'show image color scribbles')
     parser.add_argument('--crop_size_h', type = int, default = 256, help = 'single patch size')

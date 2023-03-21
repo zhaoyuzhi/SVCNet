@@ -2,7 +2,7 @@
 
 ## 1 Train
 
-Make sure you have installed the **svcnet** requirement and download the training data.
+Make sure you have installed the **svcnet** environment and download the training data.
 
 The warm-up training includes two steps. You can start it on the ImageNet dataset by running:
 ```bash

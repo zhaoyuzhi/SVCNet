@@ -3,7 +3,6 @@ import os
 import numpy as np
 import cv2
 from PIL import Image
-import torch
 
 # multi-layer folder
 def check_path(path):
@@ -43,14 +42,14 @@ if __name__ == "__main__":
     # ----------------------------------------
     parser = argparse.ArgumentParser()
     parser.add_argument('--baseroot', type = str, \
-        default = "./color_point40_color_width5", \
+        default = "./color_point40_color_width5_256p", \
             help = 'baseroot')
     parser.add_argument('--keyword', type = str, \
         default = "_256p.png", \
             help = 'keyword')
     parser.add_argument('--save_keyword', type = str, \
         default = "_vis.png", \
-            help = 'keyword')
+            help = 'save_keyword')
     parser.add_argument('--show', type = bool, default = True, help = 'show image color scribbles')
     parser.add_argument('--color_width', type = int, default = 10, help = 'width of each color scribble')
     parser.add_argument('--color_blur_width', type = int, default = 5, help = 'Gaussian blur width of each color scribble')

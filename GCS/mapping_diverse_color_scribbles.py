@@ -60,17 +60,15 @@ if __name__ == "__main__":
     # ----------------------------------------
     parser = argparse.ArgumentParser()
     parser.add_argument('--baseroot', type = str, \
-        default = "F:\\submitted papers\\SVCNet\\code_evaluation\\fixed_color_scribbles\\color_point40_color_width5_256p", \
+        default = "./color_point40_color_width5_256p", \
             help = 'baseroot')
     parser.add_argument('--saveroot', type = str, \
-        default = "F:\\submitted papers\\SVCNet\\code_evaluation\\fixed_color_scribbles\\color_point40_color_width5_256p_mapping", \
-            help = 'baseroot')
+        default = "./color_point40_color_width5_256p_mapping", \
+            help = 'saveroot')
     parser.add_argument('--keyword', type = str, \
         default = "_256p.png", \
             help = 'keyword')
     parser.add_argument('--show', type = bool, default = True, help = 'show image color scribbles')
-    parser.add_argument('--color_width', type = int, default = 10, help = 'width of each color scribble')
-    parser.add_argument('--color_blur_width', type = int, default = 5, help = 'Gaussian blur width of each color scribble')
     opt = parser.parse_args()
     print(opt)
 

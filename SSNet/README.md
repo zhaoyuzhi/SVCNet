@@ -2,9 +2,9 @@
 
 ## 1 Train
 
-Make sure you have installed the **svcnet** requirement and download the training data.
+Make sure you have installed the **svcnet** environment and download the training data.
 
-We omit warm-up pre-training codes for `Refinement Module` and `Super-resolution Module` due to simplicity. Instead, we provide the [pre-trained models](https://portland-my.sharepoint.com/:f:/g/personal/yzzhao2-c_my_cityu_edu_hk/EoAhNnlzoe1LkoI0CSlw9q8B-zOmJlhZUoxBVC3m3eiDUQ?e=WeTQHQ) of them for users to reproduce the training of the full SSNet.
+We omit warm-up pre-training codes for **Refinement Module** and **Super-resolution Module** due to simplicity. Instead, we provide the [pre-trained models](https://portland-my.sharepoint.com/:f:/g/personal/yzzhao2-c_my_cityu_edu_hk/EoAhNnlzoe1LkoI0CSlw9q8B-zOmJlhZUoxBVC3m3eiDUQ?e=WeTQHQ) of them for users to reproduce the training of the full SSNet.
 
 The joint training can be started by running:
 ```bash

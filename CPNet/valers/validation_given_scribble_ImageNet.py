@@ -64,7 +64,7 @@ if __name__ == "__main__":
         default = "./data/ILSVRC2012/ILSVRC2012_val_256", \
             help = 'the base validation folder')
     parser.add_argument('--scribble_root', type = str, \
-        default = './color_point40_color_width5_256p/ImageNet', \
+        default = './color_point40_color_width5_ImageNet', \
             help = 'the base validation folder')
     parser.add_argument('--txt_root', type = str, default = "./txt/ctest10k.txt", help = 'the base training folder')
     parser.add_argument('--crop_size_w', type = int, default = 256, help = 'size of image')

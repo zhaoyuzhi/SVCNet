@@ -11,7 +11,7 @@ SVCNet is an architecture for scribble-based video colorization, which includes 
 > [**SVCNet: Scribble-based Video Colorization Network with Temporal Aggregation**](https://github.com/zhaoyuzhi/SVCNet)<br>
 > Yuzhi Zhao<sup>1</sup>, Lai-Man Po<sup>1</sup>, Kangcheng Liu<sup>2</sup>, Xuehui Wang<sup>3</sup>, Wing-Yin Yu<sup>1</sup>, Pengfei Xian<sup>1</sup>, Yujia Zhang<sup>4</sup>, Mengyang Liu<sup>4</sup><br>
 > <sup>1</sup>City University of Hong Kong, <sup>2</sup>Nanyang Technological University, <sup>3</sup>Shanghai Jiao Tong University, <sup>4</sup>Tencent Video<br>
-> *under review of IEEE Transactions on Image Processing (**TIP**) 2023*<br>
+> *IEEE Transactions on Image Processing (**TIP**), 2023*<br>
 
 ![pipeline](./assets/pipeline.png)
 
@@ -94,9 +94,9 @@ All the ImageNet files can be downloaded at this [link](https://portland-my.shar
 
 ## 4 Fast inference
 
-We include a legacy video segment along with their corresponding color scribble frames with 4 different styles. The input grayscale frames and color scribbles are also included. You may find the code related to how to generate these color scribbles in **GCS** sub-folder.
+### 4.1 Demo
 
-Users can easily reproduce the following results by running:
+We include a legacy video segment along with their corresponding color scribble frames with 4 different styles. The input grayscale frames and color scribbles are also included. You may find the code related to how to generate these color scribbles in **GCS** sub-folder. Users can easily reproduce the following results by running:
 
 ```bash
 cd SSNet
@@ -108,6 +108,12 @@ python test.py
 
 ![gif](./assets/test_result_diverse3.gif)
 ![gif](./assets/test_result_diverse4.gif)
+
+### 4.2 Test on user data
+
+- Creating your own scribbles (see **GCS** sub-folder). You need first provide the first color scribble; then, you can use **generate_color_scribbles_video.py** script to obtain the following scribbles based on the optical flows of your own grayscale video.
+
+- Inference with your generated scribbles (see **SSNet** sub-folder). Please follow the guide in the README file, e.g., running **test.py**.
 
 ## 5 Visualization
 
@@ -130,7 +136,7 @@ If you think this work is helpful, please consider cite:
 @article{zhao2023svcnet,
   title={SVCNet: Scribble-based Video Colorization Network with Temporal Aggregation},
   author={Zhao, Yuzhi and Po, Lai-Man and Liu, Kangcheng and Wang, Xuehui and Yu, Wing-Yin and Xian, Pengfei and Zhang, Yujia and Liu, Mengyang},
-  journal={arXiv preprint arXiv:2303.11591},
+  journal={IEEE Transactions on Image Processing (TIP)},
   year={2023}
 }
 ```

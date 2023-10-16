@@ -2,7 +2,7 @@
 
 <br>Official PyTorch Implementation of the SVCNet Paper<br>
 
-[Project](https://github.com/zhaoyuzhi/SVCNet) | [arXiv](https://arxiv.org/abs/2303.11591)
+[Project](https://github.com/zhaoyuzhi/SVCNet) | [arXiv](https://arxiv.org/abs/2303.11591) | [IEEE Xplore](https://ieeexplore.ieee.org/document/10198230)
 
 ## 1 Introduction
 
@@ -136,7 +136,9 @@ If you think this work is helpful, please consider cite:
 @article{zhao2023svcnet,
   title={SVCNet: Scribble-based Video Colorization Network with Temporal Aggregation},
   author={Zhao, Yuzhi and Po, Lai-Man and Liu, Kangcheng and Wang, Xuehui and Yu, Wing-Yin and Xian, Pengfei and Zhang, Yujia and Liu, Mengyang},
-  journal={IEEE Transactions on Image Processing (TIP)},
+  journal={IEEE Transactions on Image Processing},
+  volume={32},
+  pages={4443-4458},
   year={2023}
 }
 ```

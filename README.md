@@ -38,15 +38,9 @@ conda activate svcnet
 
 We upload the pre-trained SVCNet modules (including CPNet and SSNet) and other public pre-trained models (including PWCNet and VGG-16). By default we put all those files under a **trained_models** root.
 
-All the pre-trained model files can be downloaded at this [link](https://portland-my.sharepoint.com/:f:/g/personal/yzzhao2-c_my_cityu_edu_hk/EoAhNnlzoe1LkoI0CSlw9q8B-zOmJlhZUoxBVC3m3eiDUQ?e=WeTQHQ).
+All the pre-trained model files can be downloaded at this:
 
-Alternatively, you can download following files if you only want to do inference:
-
-- [final CPNet](https://portland-my.sharepoint.com/:u:/g/personal/yzzhao2-c_my_cityu_edu_hk/EXUIeeSbnqVJq7s4PU2emwABWfxLP1UKDHajSv9lGVH_3Q?e=q4aa8g)
-
-- [final SSNet](https://portland-my.sharepoint.com/:u:/g/personal/yzzhao2-c_my_cityu_edu_hk/EaE2q8nnMv5Hv6qDJduc6_EB6VNe5DGwavHICUwwwlqS_A?e=V4zKII)
-
-- [PWCNet (for optical flow computation)](https://portland-my.sharepoint.com/:u:/g/personal/yzzhao2-c_my_cityu_edu_hk/Eefwdef8l99LkqCiajPjwxcBN7tTcQCPSwZYl4zKZK7N9w?e=p05AUW)
+link: https://pan.baidu.com/s/1ja6mXASwx1ycYAgLLFJCHQ?pwd=g9qe code: g9qe
 
 ### 2.3 Dataset
 
